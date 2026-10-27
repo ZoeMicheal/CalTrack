@@ -1,5 +1,10 @@
 {
-  "dependencies": {
-    "@clerk/react": "^6.18.2"
+  "name": "caltrack",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev:client": "npm run dev --prefix client",
+    "dev:server": "node server/server.js",
+    "build": "npm run build --prefix client"
   }
 }

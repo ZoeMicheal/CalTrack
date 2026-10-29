@@ -1,4 +1,10 @@
 /* Temporal Replacement */
+import UserApiTest from "./UserApiTest";
+import SavedFoodApiTest from "./SavedFoodApiTest";
+import GoalApiTest from "./GoalApiTest";
+import MealApiTest from "./MealApiTest";
+import DailyRecordApiTest from "./DailyRecordApiTest";
+
 import {
   Show,
   SignInButton,
@@ -18,8 +24,12 @@ function App() {
       </Show>
 
       <Show when="signed-in">
-        <h2>You are logged in!</h2>
         <UserButton />
+        <MealApiTest />
+        <GoalApiTest />
+        <SavedFoodApiTest />
+        <UserApiTest />
+        <DailyRecordApiTest />
       </Show>
     </div>
   )

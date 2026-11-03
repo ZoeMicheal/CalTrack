@@ -1,0 +1,117 @@
+body{
+    background-color: pink;
+
+}
+.HomePage{
+    padding-bottom: 90px;
+}
+.HomePage p{
+    color: black;
+}
+.Dateheader{
+    background-color: white;
+    border-radius: 15px;
+    margin-left: 15px;
+    margin-right: 60%;
+    margin-top: 25px;
+    padding: 10px;
+    display: inline-block;
+}
+.DashboardBubble{
+    background-color: white;
+    border-radius: 40px;
+    padding: 20px;
+    margin-top:25px ;
+    margin-right: 25px;
+    margin-left: 25px;
+    position: relative;
+}
+.Statsrow{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    justify-content: space-around;
+
+}
+.group{
+    display: flex;
+    flex-direction: column;
+}
+.divider{
+    background-color: black;
+    width: 1px;
+    height: 40px;
+    flex-shrink: 0;
+}
+.Pie{
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: conic-gradient(purple 0% var(--percent), mediumpurple var(--percent) 100%);
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 10px;
+    display:grid;
+    place-items: center;
+
+}
+.Piehole{
+    width:55%;
+    height:55%;
+    border-radius: 50%;
+    background-color: white;
+}
+.Percentbubble{
+    background-color: pink;
+    border-radius: 25px;
+    position: absolute;
+    top: 25px;
+    right: 55px;
+    padding: 10px;
+}
+.DateSwipe{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 25px;
+}
+.Datetext{
+    background-color: white;
+    border-radius: 25px;
+    padding: 15px;
+}
+.swipebutton{
+    background-color: white;
+    border-radius: 50%;
+    padding: 15px;
+    margin: auto;
+}
+.Horizontaldivider{
+    background-color: black;
+    margin-left: 15px;
+    margin-right: 15px;
+    margin-top: 35px;
+    height: 3px;
+    border-radius: 50%;
+}
+.Meallog{
+    list-style: none;
+    padding:0px;
+    margin-top: 50px;
+}
+.MeallogTags{
+    background-color: white;
+    padding: 15px;
+    border-radius: 25px;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    margin-left: 25px;
+    margin-right: 25px;
+}
+.swipebutton{
+    color: black;
+    font-size: 20px;
+    border: none;
+}

@@ -1,4 +1,3 @@
-
 const express = require("express");
 const mongoose = require("mongoose");
 const { getAuth } = require("@clerk/express");
@@ -10,18 +9,6 @@ const router = express.Router();
 router.use((req, res, next) => {
   const auth = getAuth(req);
   const userId = auth.userId;
-
-  // Temporary debugging information
-  // Never log the actual Bearer token or secret keys.
-  console.log("CLERK VERIFICATION DETAILS:", {
-    status: res.getHeader("x-clerk-auth-status"),
-    reason: res.getHeader("x-clerk-auth-reason"),
-    message: res.getHeader("x-clerk-auth-message"),
-    authorizationPresent: Boolean(req.headers.authorization),
-    userIdPresent: Boolean(userId),
-    isAuthenticated: auth.isAuthenticated,
-    origin: req.headers.origin,
-  });
 
   if (!userId) {
     return res.status(401).json({
@@ -61,6 +48,7 @@ router.post("/", async (req, res) => {
       "protein",
       "carbs",
       "fat",
+      "ingredients",
       "servingSize",
       "weightGrams",
       "consumedAt",
@@ -115,6 +103,7 @@ router.put("/:id", async (req, res) => {
       "protein",
       "carbs",
       "fat",
+      "ingredients",
       "servingSize",
       "weightGrams",
       "consumedAt",

@@ -1,3 +1,4 @@
+// @ts-ignore
 import React from 'react';
 import { MealLogForm, Ingredient } from '../types/meal';
 
@@ -5,9 +6,10 @@ interface Props {
     mealData: MealLogForm;
     setMealData: React.Dispatch<React.SetStateAction<MealLogForm>>;
     onSubmit: (e: React.FormEvent) => void;
+    onSaveFavorite: () => void; //Zoe added this
 }
 
-export const MealDetails: React.FC<Props> = ({ mealData, setMealData, onSubmit }) => {
+export const MealDetails: React.FC<Props> = ({ mealData, setMealData, onSubmit, onSaveFavorite }) => {
 
     // user can change/edit/delete ingredients here:
     const handleIngredientChange = (index: number, field: keyof Ingredient, value: string | number) => {
@@ -149,6 +151,13 @@ export const MealDetails: React.FC<Props> = ({ mealData, setMealData, onSubmit }
 
             <button type="submit" className="bubbly-primary-btn">
                 Save Meal to Log
+            </button>
+            <button
+                type="button"
+                className="bubbly-secondary-btn"
+                onClick={onSaveFavorite}
+            >
+                Save to Favorites
             </button>
         </form>
     );

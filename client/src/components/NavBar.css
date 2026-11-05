@@ -1,0 +1,32 @@
+.NavBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: white;
+    height: 70px;
+}
+.Buttontype1{
+    background: none;
+    border: none;
+    color: dimgray;
+    font-size: 20px;
+}
+.Buttontype1.active{
+    color: purple;
+}
+.Buttontype2{
+    background: purple;
+    border: pink;
+    border-radius: 50%;
+    color: white;
+    font-size: 35px;
+    display:grid;
+    place-items: center;
+    margin-top: -25px;
+    height: 75px;
+    width: 75px;
+}

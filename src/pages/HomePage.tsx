@@ -1,6 +1,6 @@
-import './homepage.css'
+import './HomePage.css'
 import NavBar from "../components/NavBar.tsx";
-import {type CSSProperties, useState} from 'react'
+import { useState} from 'react'
 import { IoIosArrowBack } from "react-icons/io";
 import { IoIosArrowForward } from "react-icons/io";
 

@@ -9,8 +9,8 @@ import { AddMealMenu } from "../components/AddMealMenu";
 import { CameraScanner } from "../components/CameraScanner";
 import { MealDetails } from "../components/MealDetails";
 
-// get calorie method (TODO)
-function getCaloriesFromIngredients() {
+// get calorie method
+function getCaloriesFromIngredient() {
 
 }
 
@@ -208,14 +208,11 @@ function HomePage() {
                 ))}
             </ul>
 
-            <button className="floating-plus-btn" onClick={() => setCurrentStep('MENU')}>
-                +
-            </button>
-
+            {/* Popout Menu / Camera / Detailed Ingredients View */}
             {currentStep !== 'CLOSED' && (
                 <div className="modal-overlay">
-                    <div className="modal-content">
-                        <button className="close-btn" onClick={resetModal}>✕</button>
+                    <div className="pink-bubble-modal">
+                        <button className="close-bubble-btn" onClick={resetModal}>✕</button>
 
                         {currentStep === 'MENU' && (
                             <AddMealMenu
@@ -236,10 +233,12 @@ function HomePage() {
                         )}
 
                         {currentStep === 'SAVED_MEALS' && (
-                            <div>
+                            <div className="pink-saved-box">
                                 <h3>Saved Meals</h3>
                                 <p>No saved meals found.</p>
-                                <button onClick={() => setCurrentStep('MENU')}>Back</button>
+                                <button className="pink-bubble-btn secondary" onClick={() => setCurrentStep('MENU')}>
+                                    Back
+                                </button>
                             </div>
                         )}
 
@@ -254,7 +253,8 @@ function HomePage() {
                 </div>
             )}
 
-            <NavBar />
+            {/* Passes opening action directly to the bubbly plus button inside Navbar */}
+            <NavBar onOpenMenu={() => setCurrentStep('MENU')} />
         </section>
     );
 }

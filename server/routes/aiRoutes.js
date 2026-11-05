@@ -2,7 +2,6 @@ const express = require("express");
 const {GoogleGenAI, Type} = require('@google/genai');
 const router = express.Router();
 
-
 const ai = new GoogleGenAI({apiKey: process.env.GOOGLE_API_KEY});
 
 // post api/ai/extract

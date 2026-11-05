@@ -1,10 +1,21 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { ClerkProvider } from '@clerk/clerk-react';
 import './index.css'
 import App from './App.jsx'
 
+console.log("Environment variables:", import.meta.env);
+
+const PUBLISHABLE_KEY = import.meta.env.CLERK_PUBLISHABLE_KEY;
+
+if (!PUBLISHABLE_KEY) {
+    throw new Error('Missing Clerk Publishable Key in .env file');
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+        <App />
+      </ClerkProvider>
   </StrictMode>,
 )

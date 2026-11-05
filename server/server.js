@@ -4,6 +4,7 @@ const savedFoodRoutes = require("./routes/savedFoodRoutes");
 const goalRoutes = require("./routes/goalRoutes");
 const path = require("path");
 const dailyRecordRoutes = require("./routes/dailyRecordRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 
 require("dotenv").config({
   path: path.join(__dirname, ".env"),
@@ -26,6 +27,8 @@ const app = express();
 
 console.log('Starting CalTrack backend...');
 
+
+// middleware
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 
@@ -35,6 +38,8 @@ app.use(
     debug: true,
   })
 );
+
+// mount routes for application
 app.get("/debug/auth", (req, res) => {
   const { getAuth } = require("@clerk/express");
   const auth = getAuth(req);
@@ -47,16 +52,29 @@ app.get("/debug/auth", (req, res) => {
     clerkReason: res.getHeader("x-clerk-auth-reason") ?? null,
   });
 });
+
+// meal routes
 app.use("/api/meals", mealRoutes);
+
+// goal routes
 app.use("/api/goals", goalRoutes);
+
+// saved foods
 app.use("/api/saved-foods", savedFoodRoutes);
+
+// user routes
 app.use("/api/users", userRoutes);
 app.use("/api/daily-records", dailyRecordRoutes);
 
+// route for ai generation
+app.use("/api/ai", aiRoutes);
+
+// test backend route
 app.get('/health', (req, res) => {
   res.json({ message: 'CalTrack backend is running!' });
 });
 
+// start server method
 async function startServer() {
   try {
     console.log('Connecting to MongoDB...');

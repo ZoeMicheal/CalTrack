@@ -1,5 +1,5 @@
 import NavBar from "../components/NavBar.tsx";
-import { CSSProperties, useState } from 'react';
+import { CSSProperties, useEffect, useState } from 'react';
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import './HomePage.css';
 import { useAuth } from "@clerk/clerk-react";
@@ -13,6 +13,25 @@ import { MealDetails } from "../components/MealDetails";
 function getCaloriesFromIngredient() {
 
 }
+interface MealLogEntry extends MealLogForm {
+    _id?: string;
+    consumedAt?: string;
+}
+
+const formatDateKey = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const normalizeMealType = (mealType: string) => {
+    if (mealType === 'Snack') {
+        return 'Snacks';
+    }
+
+    return mealType;
+};
 
 function HomePage() {
     // webcam/ai logic
@@ -102,6 +121,7 @@ function HomePage() {
         const payload = {
             ...mealData,
             clerkUserId: userId,
+            consumedAt: new Date().toISOString(),
         };
 
         try {
@@ -114,6 +134,7 @@ function HomePage() {
             if (res.ok) {
                 alert('Meal logged successfully!');
                 resetModal();
+                await loadDashboardData();
             }
         } catch (err) {
             console.error('Failed to log meal:', err);
@@ -125,30 +146,71 @@ function HomePage() {
         setCapturedImage(null);
     };
 
-    // data and UI logic
-    const now = new Date();
-    const date = now.toLocaleDateString('en-US', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'short',
-    });
-    const [selecteddate, setselecteddate] = useState(now);
-    function changeDate(amount: any) {
+    const [selecteddate, setselecteddate] = useState(new Date());
+    const [meals, setMeals] = useState<MealLogEntry[]>([]);
+    const [dailyGoal, setDailyGoal] = useState(2000);
+
+    const loadDashboardData = async () => {
+        if (!userId) {
+            setMeals([]);
+            return;
+        }
+
+        try {
+            const [mealsResponse, goalResponse] = await Promise.all([
+                fetch('http://localhost:5000/api/meals', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                }),
+                fetch('http://localhost:5000/api/goals', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                }),
+            ]);
+
+            if (mealsResponse.ok) {
+                const mealsData = await mealsResponse.json();
+                setMeals(Array.isArray(mealsData) ? mealsData : []);
+            }
+
+            if (goalResponse.ok) {
+                const goalData = await goalResponse.json();
+                if (goalData && typeof goalData.calorieMax === 'number') {
+                    setDailyGoal(goalData.calorieMax);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load dashboard data:', error);
+        }
+    };
+
+    useEffect(() => {
+        loadDashboardData();
+    }, [userId]);
+
+    function changeDate(amount: number) {
         const copydate = new Date(selecteddate);
         copydate.setDate(copydate.getDate() + amount);
         setselecteddate(copydate);
     }
-    const changingdate = selecteddate.toLocaleDateString('en-US', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
+
+    const selectedDateKey = formatDateKey(selecteddate);
+
+    const selectedDateMeals = meals.filter((meal) => {
+        if (!meal.consumedAt) {
+            return false;
+        }
+
+        return formatDateKey(new Date(meal.consumedAt)) === selectedDateKey;
     });
 
-    const goal = 1000;
-    const consumed = 866;
-    const remaining = goal - consumed;
-    const percentage = Math.round((consumed / goal) * 100);
+    const consumed = selectedDateMeals.reduce(
+        (sum, meal) => sum + (Number(meal.calories) || 0),
+        0
+    );
+
+    const remaining = dailyGoal - consumed;
+    const percentage = dailyGoal > 0 ? Math.round((consumed / dailyGoal) * 100) : 0;
 
     const meallog = [
         { id: 1, mealtype: 'Breakfast', calories: 0 },
@@ -156,7 +218,33 @@ function HomePage() {
         { id: 3, mealtype: 'Dinner', calories: 0 },
         { id: 4, mealtype: 'Snacks', calories: 0 },
         { id: 5, mealtype: 'Drinks', calories: 0 }
-    ];
+    ].map((entry) => {
+        const matchingMeals = selectedDateMeals.filter(
+            (meal) => normalizeMealType(meal.mealType) === entry.mealtype
+        );
+
+        const calories = matchingMeals.reduce(
+            (sum, meal) => sum + (Number(meal.calories) || 0),
+            0
+        );
+
+        return {
+            ...entry,
+            calories,
+        };
+    });
+
+    const date = selecteddate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'short',
+    });
+    const changingdate = selecteddate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
 
     return (
         <section className="HomePage">

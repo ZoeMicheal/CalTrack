@@ -19,12 +19,21 @@ export const CameraScanner: React.FC<Props> = ({capturedImage, loading, onCaptur
         }
     };
 
+    // @ts-ignore
     return (
         <div className="camera-box">
             {!capturedImage ? (
                 <>
                     <h3>Take Photo of Meal</h3>
-                    <Webcam ref={webcamRef} screenshotFormat="image/jpeg" width="100%" />
+                    <Webcam ref={webcamRef} screenshotFormat="image/jpeg" //Zoe reduced image scale
+                            screenshotQuality={0.7}
+                            forceScreenshotSourceSize={false}
+                            videoConstraints={{
+                                width: { ideal: 1024 },
+                                height: { ideal: 768 },
+                                facingMode: "environment"
+                            }} //end of what zoe added.
+                            width="100%" />
                     <button onClick={handleCapture} className="primary-btn" style={{ marginTop: 10 }}>
                         Capture
                     </button>

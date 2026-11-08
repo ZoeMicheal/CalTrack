@@ -1,14 +1,16 @@
-/* Placeholders for now */
-const userRoutes = require("./routes/userRoutes");
-const savedFoodRoutes = require("./routes/savedFoodRoutes");
-const goalRoutes = require("./routes/goalRoutes");
 const path = require("path");
-const dailyRecordRoutes = require("./routes/dailyRecordRoutes");
-const aiRoutes = require("./routes/aiRoutes");
 
 require("dotenv").config({
   path: path.join(__dirname, ".env"),
 });
+
+/* Placeholders for now */
+const userRoutes = require("./routes/userRoutes");
+const savedFoodRoutes = require("./routes/savedFoodRoutes");
+const goalRoutes = require("./routes/goalRoutes");
+const dailyRecordRoutes = require("./routes/dailyRecordRoutes");
+const aiRoutes = require("./routes/aiRoutes");
+
 
 /*Temporarily*/
 console.log("Clerk environment check:", {

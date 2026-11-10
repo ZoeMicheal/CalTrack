@@ -40,6 +40,7 @@ interface UserGoal {
     proteinTarget: number;
     carbsTarget: number;
     fatTarget: number;
+    primaryMetric?: 'calories' | 'protein' | 'carbs' | 'fat';
     stickerColor: string;
 }
 interface SavedFood {
@@ -55,7 +56,11 @@ interface SavedFood {
 }
 // End of Addition to connect db to front end
 
-function HomePage() {
+interface HomePageProps {
+    onNavigate?: (page: string) => void;
+}
+
+function HomePage({ onNavigate }: HomePageProps) {
     // webcam/ai logic
     const { userId, getToken } = useAuth(); // clerk userID
     const [savedMeals, setSavedMeals] = useState<SavedMeal[]>([]); //hold meals gotten from Mongodb
@@ -547,30 +552,41 @@ function HomePage() {
 
     //Temporal replacement to lines 228 - 231:
 
-    //const goal = 1000; // Temporary goal until we connect user goals
-    const goal = userGoals?.calorieMax ?? 2000;
+    // Zoe: Homepage now uses the user's selected tracking metric
+    const primaryMetric = userGoals?.primaryMetric ?? 'calories';
 
     // Get meals belonging to the currently selected date
-        const todaysMeals = savedMeals.filter((meal) => {
-            return (
-                new Date(meal.consumedAt).toDateString() ===
-                selecteddate.toDateString()
-            );
-        });
-
-    // Calculate calories consumed on the selected date
-        const consumed = todaysMeals.reduce(
-            (total, meal) => total + meal.calories,
-            0
+    const todaysMeals = savedMeals.filter((meal) => {
+        return (
+            new Date(meal.consumedAt).toDateString() ===
+            selecteddate.toDateString()
         );
+    });
 
-    // Calculate remaining calories
-        const remaining = goal - consumed;
+    // Calculate the selected metric's total for the day
+    const consumed = todaysMeals.reduce((total, meal) => {
+        return total + (meal[primaryMetric] ?? 0);
+    }, 0);
 
-    // Calculate progress percentage
-        const percentage = goal > 0
-            ? Math.min(Math.round((consumed / goal) * 100), 100)
-            : 0;
+    // Match the selected metric to its saved daily target
+    const goal =
+        primaryMetric === 'protein'
+            ? (userGoals?.proteinTarget ?? 0)
+            : primaryMetric === 'carbs'
+                ? (userGoals?.carbsTarget ?? 0)
+                : primaryMetric === 'fat'
+                    ? (userGoals?.fatTarget ?? 0)
+                    : (userGoals?.calorieMax ?? 2000);
+
+    // Calculate remaining amount and progress
+    const remaining = goal - consumed;
+
+    const percentage = goal > 0
+        ? Math.min(Math.round((consumed / goal) * 100), 100)
+        : 0;
+
+    // Display unit for the selected metric
+    const metricUnit = primaryMetric === 'calories' ? 'kcal' : 'g';
 // end of replacement.
 
     //const meallog = [
@@ -640,7 +656,16 @@ function HomePage() {
             </div>
 
             <div className="DashboardBubble">
-                <div className="Percentbubble"><p>{percentage}%</p></div>
+                <div className="primary-metric-label">
+                    {primaryMetric === 'calories' && 'Daily Calories'}
+                    {primaryMetric === 'protein' && 'Daily Protein'}
+                    {primaryMetric === 'carbs' && 'Daily Carbohydrates'}
+                    {primaryMetric === 'fat' && 'Daily Fat'}
+                </div>
+
+                <div className="Percentbubble">
+                    <p>{percentage}%</p>
+                </div>
                 <div
                     className="Pie"
                     style={{
@@ -651,12 +676,12 @@ function HomePage() {
                 </div>
                 <div className="Statsrow">
                     <div className="group">
-                        <p>{consumed}</p>
+                        <p>{consumed} {metricUnit}</p>
                         <p>Consumed</p>
                     </div>
                     <div className="divider"></div>
                     <div className="group">
-                        <p>{remaining}</p>
+                        <p>{remaining} {metricUnit}</p>
                         <p>Remaining</p>
                     </div>
                 </div>
@@ -873,7 +898,11 @@ function HomePage() {
             )}
 
             {/* Passes opening action directly to the bubbly plus button inside Navbar */}
-            <NavBar onOpenMenu={() => setCurrentStep('MENU')} />
+            <NavBar
+                onOpenMenu={() => setCurrentStep('MENU')}
+                onNavigate={onNavigate}
+                currentPage="home"
+            />
         </section>
     );
 }

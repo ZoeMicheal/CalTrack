@@ -561,3 +561,11 @@ body {
     margin-top: 0;
 }
 
+/* Zoe adding the display for the selected tracking metric */
+.primary-metric-label {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: #e75480;
+    margin-bottom: 15px;
+}

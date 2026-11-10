@@ -44,6 +44,10 @@ router.put("/", async (req, res) => {
         "carbsTarget",
         "fatTarget",
         "stickerColor",
+        // Zoe is adding additional user preferences:
+        "primaryMetric",
+        "weightGoal",
+        "targetWeight",
         ];
 
         const updates = {};

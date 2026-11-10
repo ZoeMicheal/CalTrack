@@ -1,0 +1,103 @@
+
+/* Zoe: Goals page layout */
+
+.goals-form {
+    width: calc(100% - 50px);
+    max-width: none;
+    margin: 30px auto 110px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-sizing: border-box;
+}
+
+/* Long white bubbles, matching CalTrack's homepage */
+
+.goal-card {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: white;
+    border-radius: 25px;
+    padding: 25px 30px;
+    color: black;
+}
+
+/* Section headings */
+
+.goal-card h3 {
+    margin: 0 0 5px;
+    color: #e75480;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.goal-card p {
+    margin: 0 0 10px;
+    color: #888;
+    font-size: 15px;
+}
+
+/* Labels */
+
+.goal-card label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Inputs and dropdowns */
+
+.goal-card input,
+.goal-card select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 18px;
+    border: 2px solid #ffb6c1;
+    border-radius: 30px;
+    background-color: white;
+    color: #333;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.goal-card input:focus,
+.goal-card select:focus {
+    border-color: #e75480;
+}
+
+/* Save button */
+
+.goals-save-btn {
+    width: 100%;
+    background-color: #e75480;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 17px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.goals-save-btn:hover {
+    background-color: #d63d6d;
+}
+
+/* Smaller screens */
+
+@media (max-width: 600px) {
+    .goals-form {
+        width: calc(100% - 30px);
+    }
+
+    .goal-card {
+        padding: 20px;
+        border-radius: 20px;
+    }
+}

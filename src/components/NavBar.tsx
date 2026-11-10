@@ -23,7 +23,11 @@ function NavBar({ onOpenMenu, onNavigate, currentPage }: NavBarProps) {
                     <p>Home</p>
                 </button>
 
-                <button className="Buttontype1"><GiMeal /><p>Meal log</p></button>
+                <button className="Buttontype1" onClick={() => onNavigate?.('meallog')}>
+                    <GiMeal />
+                    <p>Meal log</p>
+                </button>
+
                 <button className="Buttontype2" onClick={onOpenMenu}>
                     <FaPlus />
                 </button>
@@ -35,7 +39,6 @@ function NavBar({ onOpenMenu, onNavigate, currentPage }: NavBarProps) {
                     <IoMdSettings />
                     <p>Settings</p>
                 </button>
-
                 <button className="Buttontype1"><IoPerson /><p>Profile</p></button>
             </nav>
         </section>

@@ -1,6 +1,7 @@
-
 import { useState } from 'react';
+import { SignedOut, SignInButton, SignUpButton } from '@clerk/clerk-react';
 import './App.css';
+import './pages/HomePage.css'; // Ensures modal-overlay and pink-bubble-modal styles load globally
 
 import HomePage from './pages/HomePage.tsx';
 import Settingspage from './pages/Settingspage.tsx';
@@ -20,6 +21,29 @@ function App() {
             ) : (
                 <HomePage onNavigate={setCurrentPage} />
             )}
+
+            <SignedOut>
+                <div className="modal-overlay">
+                    <div className="pink-bubble-modal auth-welcome-modal">
+                        <h3>Welcome!</h3>
+                        <p>
+                            Create an account or log in to start logging meals and tracking your daily goals.
+                        </p>
+
+                        <SignUpButton mode="modal">
+                            <button type="button" className="bubbly-primary-btn">
+                                Create an Account
+                            </button>
+                        </SignUpButton>
+
+                        <SignInButton mode="modal">
+                            <button type="button" className="bubbly-secondary-btn">
+                                Log In
+                            </button>
+                        </SignInButton>
+                    </div>
+                </div>
+            </SignedOut>
         </section>
     );
 }

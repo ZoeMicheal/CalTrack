@@ -244,6 +244,61 @@ body {
     background: #ff5277;
 }
 
+.saved-meal-update-prompt {
+    gap: 14px;
+}
+
+.saved-meal-update-prompt h3 {
+    margin: 14px 0 0 0;
+    color: #d85c76;
+    font-size: 24px;
+    text-align: center;
+}
+
+.saved-meal-update-prompt p {
+    margin: 0;
+    color: #4a3e43;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.saved-meal-update-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.saved-meal-update-card {
+    background: #fff;
+    border: 2px solid #ffd7df;
+    border-radius: 18px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #4a3e43;
+}
+
+.saved-meal-update-card span {
+    font-size: 12px;
+    font-weight: 700;
+    color: #d85c76;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.saved-meal-update-card strong {
+    font-size: 22px;
+    color: #d85c76;
+}
+
+.saved-meal-update-card small {
+    font-size: 11px;
+    line-height: 1.4;
+    color: #4a3e43;
+}
+
 /* --- VERTICAL MOBILE FORM STYLING --- */
 .mobile-meal-form {
     display: flex;
@@ -295,6 +350,56 @@ body {
 .form-group input:focus,
 .form-group select:focus {
     border-color: #ff6b8b;
+}
+
+.food-name-autocomplete {
+    position: relative;
+    width: 100%;
+}
+
+.meal-name-suggestions {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 2px solid #ffccd5;
+    border-radius: 16px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    box-shadow: 0 10px 22px rgba(216, 92, 118, 0.12);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 20;
+}
+
+.meal-name-suggestion-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #ffe1e6;
+    color: #4a3e43;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.meal-name-suggestion-btn:last-child {
+    border-bottom: none;
+}
+
+.meal-name-suggestion-btn:hover {
+    background: #fff3f5;
+}
+
+.meal-name-suggestion-btn small {
+    color: #d85c76;
+    font-weight: 700;
 }
 
 .vertical-macro-card {

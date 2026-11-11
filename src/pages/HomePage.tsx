@@ -31,6 +31,12 @@ interface SavedMeal {
     protein: number;
     carbs: number;
     fat: number;
+    servingSize?: string;
+    ingredients?: Array<{
+        name: string;
+        quantity: number;
+        unit: string;
+    }>;
     consumedAt: string;
 }
 interface UserGoal {
@@ -71,6 +77,11 @@ function HomePage({ onNavigate }: HomePageProps) {
     const [editFavoriteData, setEditFavoriteData] = useState<SavedFood | null>(null);
     const [userGoals, setUserGoals] = useState<UserGoal | null>(null);
     const [refreshMeals, setRefreshMeals] = useState(0); //Reacts fetch the meals
+    const [savedMealConflict, setSavedMealConflict] = useState<{
+        savedFood: SavedFood;
+        mealData: MealLogForm;
+    } | null>(null);
+    const [updatingSavedMeal, setUpdatingSavedMeal] = useState(false);
 
     // Giving homepage access to meal records
     useEffect(() => {
@@ -319,6 +330,29 @@ function HomePage({ onNavigate }: HomePageProps) {
             console.log('Meal saved successfully:', savedMeal);
 
             setRefreshMeals(prev => prev + 1); // Refresh the homepage's meal data after saving
+
+            const matchedSavedFood = savedFoods.find((food) => {
+                return food.foodName.trim().toLowerCase() === mealData.foodName.trim().toLowerCase();
+            });
+
+            if (matchedSavedFood) {
+                const valuesDiffer = 
+                    Math.abs(matchedSavedFood.calories - mealData.calories) > 0.01 ||
+                    Math.abs(matchedSavedFood.protein - mealData.protein) > 0.01 ||
+                    Math.abs(matchedSavedFood.carbs - mealData.carbs) > 0.01 ||
+                    Math.abs(matchedSavedFood.fat - mealData.fat) > 0.01 ||
+                    (matchedSavedFood.servingSize || '').trim().toLowerCase() !== (mealData.servingSize || '').trim().toLowerCase();
+
+                if (valuesDiffer) {
+                    setSavedMealConflict({
+                        savedFood: matchedSavedFood,
+                        mealData: { ...mealData },
+                    });
+                    resetModal();
+                    return;
+                }
+            }
+
             alert('Meal logged successfully!');
             resetModal();
 
@@ -518,7 +552,87 @@ function HomePage({ onNavigate }: HomePageProps) {
         food.foodName.toLowerCase().includes(savedFoodSearch.toLowerCase())
     );
 
+    const savedMealSuggestions = Array.from(
+        new Map(
+            savedMeals
+                .filter((meal) => typeof meal.foodName === 'string' && meal.foodName.trim())
+                .map((meal) => {
+                    const normalizedName = meal.foodName.trim();
+                    const normalizedIngredients = Array.isArray(meal.ingredients)
+                        ? meal.ingredients.map((ingredient) => ({
+                            name: String(ingredient.name || '').trim(),
+                            quantity: Number(ingredient.quantity) || 0,
+                            unit: String(ingredient.unit || 'g').trim() || 'g',
+                        }))
+                        : [];
 
+                    return [
+                        normalizedName.toLowerCase(),
+                        {
+                            foodName: normalizedName,
+                            calories: Number(meal.calories) || 0,
+                            protein: Number(meal.protein) || 0,
+                            carbs: Number(meal.carbs) || 0,
+                            fat: Number(meal.fat) || 0,
+                            servingSize: typeof meal.servingSize === 'string' && meal.servingSize
+                                ? meal.servingSize
+                                : '1 serving',
+                            ingredients: normalizedIngredients,
+                        },
+                    ];
+                })
+        ).values()
+    );
+
+    const handleAcceptSavedMealUpdate = async () => {
+        if (!savedMealConflict) return;
+
+        try {
+            setUpdatingSavedMeal(true);
+            const token = await getToken();
+
+            if (!token) {
+                alert('Please sign in before updating a saved meal.');
+                return;
+            }
+
+            const response = await fetch(
+                `http://localhost:5000/api/saved-foods/${savedMealConflict.savedFood._id}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        foodName: savedMealConflict.mealData.foodName.trim(),
+                        calories: savedMealConflict.mealData.calories,
+                        protein: savedMealConflict.mealData.protein,
+                        carbs: savedMealConflict.mealData.carbs,
+                        fat: savedMealConflict.mealData.fat,
+                        servingSize: savedMealConflict.mealData.servingSize || '1 serving',
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to update saved meal.');
+            }
+
+            setRefreshSavedFoods(prev => prev + 1);
+            setSavedMealConflict(null);
+            alert('Saved meal updated to match this log.');
+        } catch (error) {
+            console.error('Error updating saved meal:', error);
+            alert('Unable to update the saved meal right now.');
+        } finally {
+            setUpdatingSavedMeal(false);
+        }
+    };
+
+    const handleCancelSavedMealUpdate = () => {
+        setSavedMealConflict(null);
+    };
 
     const resetModal = () => {
         setCurrentStep('CLOSED');
@@ -708,6 +822,51 @@ function HomePage({ onNavigate }: HomePageProps) {
                 ))}
             </ul>
 
+            {savedMealConflict && (
+                <div className="modal-overlay">
+                    <div className="pink-bubble-modal saved-meal-update-prompt">
+                        <button className="close-bubble-btn" onClick={handleCancelSavedMealUpdate}>✕</button>
+
+                        <h3>Update Saved Meal?</h3>
+                        <p>
+                            There is already a saved meal named "{savedMealConflict.savedFood.foodName}".
+                            Its nutrition values are different from this meal log. Would you like to update the saved meal to match the current log?
+                        </p>
+
+                        <div className="saved-meal-update-grid">
+                            <div className="saved-meal-update-card">
+                                <span>Saved Meal</span>
+                                <strong>{savedMealConflict.savedFood.calories} kcal</strong>
+                                <small>{savedMealConflict.savedFood.protein}g protein • {savedMealConflict.savedFood.carbs}g carbs • {savedMealConflict.savedFood.fat}g fat</small>
+                            </div>
+
+                            <div className="saved-meal-update-card">
+                                <span>Current Log</span>
+                                <strong>{savedMealConflict.mealData.calories} kcal</strong>
+                                <small>{savedMealConflict.mealData.protein}g protein • {savedMealConflict.mealData.carbs}g carbs • {savedMealConflict.mealData.fat}g fat</small>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="bubbly-primary-btn"
+                            onClick={handleAcceptSavedMealUpdate}
+                            disabled={updatingSavedMeal}
+                        >
+                            {updatingSavedMeal ? 'Updating...' : 'Update saved meal'}
+                        </button>
+
+                        <button
+                            type="button"
+                            className="bubbly-secondary-btn"
+                            onClick={handleCancelSavedMealUpdate}
+                        >
+                            Keep previous saved data
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Popout Menu / Camera / Detailed Ingredients View */}
             {currentStep !== 'CLOSED' && (
                 <div className="modal-overlay">
@@ -891,6 +1050,7 @@ function HomePage({ onNavigate }: HomePageProps) {
                                 setMealData={setMealData}
                                 onSubmit={handleSaveMeal}
                                 onSaveFavorite={handleSaveFavorite}
+                                savedMealSuggestions={savedMealSuggestions}
                             />
                         )}
                     </div>

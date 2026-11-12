@@ -18,6 +18,7 @@ interface SavedMeal {
     carbs: number;
     fat: number;
     servingSize?: string;
+    weightGrams?: number;
     ingredients?: Array<{
         name: string;
         quantity: number;
@@ -107,6 +108,9 @@ function Meallog({ onNavigate }: MeallogProps) {
 
     // Saved meals & favorites state
     const [savedMeals, setSavedMeals] = useState<SavedMeal[]>([]);
+    const [selectedMeal, setSelectedMeal] = useState<SavedMeal | null>(null);
+    const [savingMeal, setSavingMeal] = useState(false);
+    const [deletingMeal, setDeletingMeal] = useState(false);
     const [savedFoods, setSavedFoods] = useState<SavedFood[]>([]);
     const [refreshSavedFoods, setRefreshSavedFoods] = useState(0);
     const [savedFoodSearch, setSavedFoodSearch] = useState('');
@@ -190,6 +194,7 @@ function Meallog({ onNavigate }: MeallogProps) {
             });
             const result = await res.json();
             if (result.success) {
+                setSelectedMeal(null);
                 setMealData({
                     clerkUserId: userId || '',
                     foodName: result.data.foodName || '',
@@ -320,7 +325,160 @@ function Meallog({ onNavigate }: MeallogProps) {
         }
     };
 
+    const handleSelectLoggedMeal = (meal: SavedMeal) => {
+        setSelectedMeal(meal);
+
+        setMealData({
+            foodName: meal.foodName,
+            mealType: meal.mealType as MealLogForm['mealType'],
+            calories: meal.calories,
+            protein: meal.protein,
+            carbs: meal.carbs,
+            fat: meal.fat,
+            servingSize: meal.servingSize || '1 serving',
+            weightGrams: meal.weightGrams ?? 0,
+            source: 'manual',
+            ingredients: meal.ingredients || [],
+        });
+
+        setActiveView('EDIT_PAGE');
+    };
+    const hasChanges = selectedMeal !== null && (
+        mealData.foodName !== selectedMeal.foodName ||
+        mealData.mealType !== selectedMeal.mealType ||
+        mealData.calories !== selectedMeal.calories ||
+        mealData.protein !== selectedMeal.protein ||
+        mealData.carbs !== selectedMeal.carbs ||
+        mealData.fat !== selectedMeal.fat ||
+        mealData.servingSize !== (selectedMeal.servingSize || '1 serving') ||
+        mealData.weightGrams !== (selectedMeal.weightGrams ?? 0)
+    );
+    const handleSaveChanges = async () => {
+        if (!selectedMeal || !hasChanges || savingMeal) return;
+
+        if (
+            !mealData.foodName.trim() ||
+            [mealData.calories, mealData.protein, mealData.carbs, mealData.fat]
+                .some(value => !Number.isFinite(value) || value < 0)
+        ) {
+            alert('Please enter valid meal information.');
+            return;
+        }
+
+        setSavingMeal(true);
+
+        try {
+            const token = await getToken();
+
+            if (!token) {
+                throw new Error('Please sign in to update your meal.');
+            }
+
+            const response = await fetch(
+                `http://localhost:5000/api/meals/${selectedMeal._id}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        foodName: mealData.foodName.trim(),
+                        mealType: mealData.mealType,
+                        calories: mealData.calories,
+                        protein: mealData.protein,
+                        carbs: mealData.carbs,
+                        fat: mealData.fat,
+                        servingSize: mealData.servingSize,
+                        weightGrams: mealData.weightGrams,
+                        ingredients: mealData.ingredients,
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error || 'Failed to update meal.');
+            }
+
+            const updatedMeal: SavedMeal = await response.json();
+
+            setSavedMeals(previous =>
+                previous.map(meal =>
+                    meal._id === updatedMeal._id ? updatedMeal : meal
+                )
+            );
+
+            handleSelectLoggedMeal(updatedMeal);
+            alert('Meal updated successfully!');
+        } catch (error) {
+            alert(
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to update meal.'
+            );
+        } finally {
+            setSavingMeal(false);
+        }
+    };
+    const handleDeleteLoggedMeal = async () => {
+        if (!selectedMeal || deletingMeal) return;
+
+        const confirmed = window.confirm(
+            `Are you sure you want to delete "${selectedMeal.foodName}"?`
+        );
+
+        if (!confirmed) return;
+
+        setDeletingMeal(true);
+
+        try {
+            const token = await getToken();
+
+            if (!token) {
+                throw new Error('Please sign in to delete your meal.');
+            }
+
+            const response = await fetch(
+                `http://localhost:5000/api/meals/${selectedMeal._id}`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error || 'Failed to delete meal.');
+            }
+
+            setSavedMeals(previous =>
+                previous.filter(meal => meal._id !== selectedMeal._id)
+            );
+
+            setSelectedMeal(null);
+            setMealData({ ...DEFAULT_MEAL });
+
+            alert('Meal deleted successfully!');
+        } catch (error) {
+            alert(
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to delete meal.'
+            );
+        } finally {
+            setDeletingMeal(false);
+        }
+    };
+    const handleCancelChanges = () => {
+        if (!selectedMeal) return;
+        handleSelectLoggedMeal(selectedMeal);
+    };
+
     const handleSelectSavedFood = (food: SavedFood) => {
+        setSelectedMeal(null);
         setMealData({
             foodName: food.foodName,
             mealType: 'Lunch',
@@ -483,6 +641,13 @@ function Meallog({ onNavigate }: MeallogProps) {
         setSavedMealConflict(null);
         onNavigate?.('home');
     };
+
+    const mealsForSelectedDate = savedMeals.filter((meal) => {
+        return (
+            new Date(meal.consumedAt).toDateString() ===
+            selecteddate.toDateString()
+        );
+    });
 
     const filteredSavedFoods = savedFoods.filter((food) =>
         food.foodName.toLowerCase().includes(savedFoodSearch.toLowerCase())
@@ -689,16 +854,88 @@ function Meallog({ onNavigate }: MeallogProps) {
                 </div>
             )}
 
-            {/* Meal Details Form (Pre-filled from AI photo, Saved Meal, or blank Manual) */}
+            {/* Previously Logged Meals */}
+            {/* Previously Logged Meals */}
+            {activeView === 'EDIT_PAGE' && mealsForSelectedDate.length > 0 && (
+                <div className="Logbubble">
+                    <h3 className="logged-meals-heading">Logged Meals</h3>
+
+                    <div className="logged-meals-list">
+                        {mealsForSelectedDate.map((meal) => (
+                            <button
+                                key={meal._id}
+                                type="button"
+                                className={`logged-meal-item ${
+                                    selectedMeal?._id === meal._id ? 'selected' : ''
+                                }`}
+                                onClick={() => handleSelectLoggedMeal(meal)}
+                            >
+                    <span className="logged-meal-name">
+                        {meal.foodName}
+                    </span>
+
+                                <span className="logged-meal-calories">
+                        {meal.calories} kcal
+                    </span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Meal Details Form (Pre-filled from AIphoto, Saved Meal, or blank Manual) */}
+            {/* Meal Details Form */}
             {activeView === 'EDIT_PAGE' && (
                 <div className="Logbubble">
                     <MealDetails
                         mealData={mealData}
                         setMealData={setMealData}
-                        onSubmit={handleSaveMeal}
+                        onSubmit={
+                            selectedMeal
+                                ? (e: React.FormEvent) => {
+                                    e.preventDefault();
+                                    handleSaveChanges();
+                                }
+                                : handleSaveMeal
+                        }
                         onSaveFavorite={handleSaveFavorite}
                         savedMealSuggestions={savedMealSuggestions}
                     />
+
+                    {selectedMeal && (
+                        <div className="logged-meal-actions">
+                            {hasChanges && (
+                                <button
+                                    type="button"
+                                    className="Savebutton"
+                                    onClick={handleSaveChanges}
+                                    disabled={savingMeal || deletingMeal}
+                                >
+                                    {savingMeal ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            )}
+
+                            {hasChanges && (
+                                <button
+                                    type="button"
+                                    className="Cancelbutton"
+                                    onClick={handleCancelChanges}
+                                    disabled={savingMeal || deletingMeal}
+                                >
+                                    Cancel Changes
+                                </button>
+                            )}
+
+                            <button
+                                type="button"
+                                className="Deletebutton"
+                                onClick={handleDeleteLoggedMeal}
+                                disabled={savingMeal || deletingMeal}
+                            >
+                                {deletingMeal ? 'Deleting...' : 'Delete Meal'}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -731,7 +968,8 @@ function Meallog({ onNavigate }: MeallogProps) {
                                     setNavModalStep('CAMERA');
                                 }}
                                 onSelectManual={() => {
-                                    setMealData(DEFAULT_MEAL);
+                                    setSelectedMeal(null);
+                                    setMealData({ ...DEFAULT_MEAL });
                                     setActiveView('EDIT_PAGE');
                                     setNavModalStep('CLOSED');
                                 }}

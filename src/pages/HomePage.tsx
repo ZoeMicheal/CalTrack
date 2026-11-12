@@ -23,6 +23,7 @@ interface SavedMeal {
     carbs: number;
     fat: number;
     servingSize?: string;
+    weightGrams?: number;
     ingredients?: Array<{
         name: string;
         quantity: number;

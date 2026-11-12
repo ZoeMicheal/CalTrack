@@ -1,168 +1,367 @@
+import { useEffect, useState } from 'react';
+import { useAuth } from '@clerk/clerk-react';
+import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import NavBar from '../components/NavBar';
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { MealLogForm } from '../types/meal';
+import { AddMealMenu } from '../components/AddMealMenu';
+import { CameraScanner } from '../components/CameraScanner';
+import { MealDetails } from '../components/MealDetails';
 import './Meallog.css';
-import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import './HomePage.css';
 
-
-interface MeallogProps {
-    onNavigate?: (page: string) => void;
-}
-
-interface LoggedMeal {
+interface SavedMeal {
     _id: string;
     foodName: string;
-    mealType: "Breakfast" | "Lunch" | "Dinner" | "Snack" | "Drinks";
+    mealType: string;
     calories: number;
     protein: number;
     carbs: number;
     fat: number;
     servingSize?: string;
     weightGrams?: number;
+    ingredients?: Array<{
+        name: string;
+        quantity: number;
+        unit: string;
+    }>;
     consumedAt: string;
 }
 
-function Meallog({ onNavigate }: MeallogProps) {
+interface SavedFood {
+    _id: string;
+    foodName: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    servingSize: string;
+    recipeNotes: string;
+    recipeUrl: string;
+}
 
+interface MeallogProps {
+    onNavigate?: (page: string) => void;
+}
+
+type MealLogView = 'EDIT_PAGE' | 'SAVED_MEALS';
+type NavModalStep = 'CLOSED' | 'MENU' | 'CAMERA';
+
+const DEFAULT_MEAL: MealLogForm = {
+    foodName: '',
+    mealType: 'Lunch',
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    servingSize: '1 serving',
+    weightGrams: 0,
+    source: 'manual',
+    ingredients: [{ name: '', quantity: 1, unit: 'g' }],
+};
+
+function Meallog({ onNavigate }: MeallogProps) {
     const { userId, getToken } = useAuth();
 
-    const [loggedMeals, setLoggedMeals] = useState<LoggedMeal[]>([]);
-
-    const [selectedMeal, setSelectedMeal] = useState<LoggedMeal | null>(null);
-    const [savingMeal, setSavingMeal] = useState(false);
-    const [deletingMeal, setDeletingMeal] = useState(false);
-    const [formData, setFormData] = useState({
-        foodName: "",
-        mealType: "Breakfast",
-        calories: "",
-        protein: "",
-        carbs: "",
-        fat: "",
-        fiber: "",
-        weightGrams: "",
+    // Read handoff payload from HomePage (if any) on initial mount
+    const [initialPayload] = useState<{
+        mode?: MealLogView;
+        mealData?: MealLogForm;
+    } | null>(() => {
+        try {
+            const raw = sessionStorage.getItem('pendingMealLog');
+            if (raw) {
+                sessionStorage.removeItem('pendingMealLog');
+                return JSON.parse(raw);
+            }
+        } catch (err) {
+            console.error('Error reading pendingMealLog:', err);
+        }
+        return null;
     });
 
-    const [loadingMeals, setLoadingMeals] = useState(true);
-    const [mealError, setMealError] = useState("");
+    const [activeView, setActiveView] = useState<MealLogView>(
+        initialPayload?.mode ?? 'EDIT_PAGE'
+    );
+    const [mealData, setMealData] = useState<MealLogForm>(
+        initialPayload?.mealData ?? DEFAULT_MEAL
+    );
+
+    // Date navigation state
+    const now = new Date();
+    const [selecteddate, setselecteddate] = useState(now);
+    function changeDate(amount: number) {
+        const copydate = new Date(selecteddate);
+        copydate.setDate(copydate.getDate() + amount);
+        setselecteddate(copydate);
+    }
+    const changingdate = selecteddate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
+
+    // Optional popout modal if user taps '+' while already on MealLog
+    const [navModalStep, setNavModalStep] = useState<NavModalStep>('CLOSED');
+    const [capturedImage, setCapturedImage] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    // Saved meals & favorites state
+    const [savedMeals, setSavedMeals] = useState<SavedMeal[]>([]);
+    const [selectedMeal, setSelectedMeal] = useState<SavedMeal | null>(null);
+    const [savingMeal, setSavingMeal] = useState(false);
+    const [deletingMeal, setDeletingMeal] = useState(false);
+    const [savedFoods, setSavedFoods] = useState<SavedFood[]>([]);
+    const [refreshSavedFoods, setRefreshSavedFoods] = useState(0);
+    const [savedFoodSearch, setSavedFoodSearch] = useState('');
+    const [editingFavorite, setEditingFavorite] = useState<SavedFood | null>(null);
+    const [editFavoriteData, setEditFavoriteData] = useState<SavedFood | null>(null);
+
+    const [savedMealConflict, setSavedMealConflict] = useState<{
+        savedFood: SavedFood;
+        mealData: MealLogForm;
+    } | null>(null);
+    const [updatingSavedMeal, setUpdatingSavedMeal] = useState(false);
+
+    // Fetch meal history for autocomplete suggestions
     useEffect(() => {
         if (!userId) {
-            setLoggedMeals([]);
-            setSelectedMeal(null);
-            setLoadingMeals(false);
+            setSavedMeals([]);
             return;
         }
 
-        let cancelled = false;
-
         const fetchMeals = async () => {
-            setLoadingMeals(true);
-            setMealError("");
-
             try {
                 const token = await getToken();
+                if (!token) return;
 
-                if (!token) {
-                    throw new Error("Please sign in to view your meals.");
-                }
+                const response = await fetch('http://localhost:5000/api/meals', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!response.ok) throw new Error('Failed to fetch meals');
 
-                const response = await fetch(
-                    "http://localhost:5000/api/meals",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error("Failed to retrieve your meals.");
-                }
-
-                const data: LoggedMeal[] = await response.json();
-                console.log("Meal Log database response:", data);
-
-                if (!cancelled) {
-                    setLoggedMeals(data);
-                }
+                const meals: SavedMeal[] = await response.json();
+                setSavedMeals(meals);
             } catch (error) {
-                if (!cancelled) {
-                    setMealError(
-                        error instanceof Error
-                            ? error.message
-                            : "Something went wrong."
-                    );
-                }
-            } finally {
-                if (!cancelled) {
-                    setLoadingMeals(false);
-                }
+                console.error('Error fetching meals:', error);
             }
         };
 
         fetchMeals();
+    }, [userId, getToken]);
 
+
+    useEffect(() => {
+        if (!userId) {
+            setSavedFoods([]);
+            return;
+        }
+
+        let cancelled = false;
+        const fetchSavedFoods = async () => {
+            try {
+                const token = await getToken();
+                if (!token) return;
+
+                const response = await fetch('http://localhost:5000/api/saved-foods', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!response.ok) throw new Error('Failed to fetch saved foods.');
+
+                const foods: SavedFood[] = await response.json();
+                if (!cancelled) setSavedFoods(foods);
+            } catch (error) {
+                if (!cancelled) console.error('Error fetching saved foods:', error);
+            }
+        };
+
+        fetchSavedFoods();
         return () => {
             cancelled = true;
         };
-    }, [userId, getToken]);
+    }, [userId, getToken, refreshSavedFoods]);
 
-    const handleSelectMeal = (meal: LoggedMeal) => {
-        setSelectedMeal(meal);
 
-        setFormData({
-            foodName: meal.foodName,
-            mealType: meal.mealType,
-            calories: String(meal.calories),
-            protein: String(meal.protein),
-            carbs: String(meal.carbs),
-            fat: String(meal.fat),
-            fiber: "",
-            weightGrams: meal.weightGrams != null
-                ? String(meal.weightGrams)
-                : "",
-        });
+    const analyzePhotoOnMealLog = async () => {
+        if (!capturedImage) return;
+        setLoading(true);
+
+        try {
+            const res = await fetch('http://localhost:5000/api/ai/extract-food', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: capturedImage }),
+            });
+            const result = await res.json();
+            if (result.success) {
+                setSelectedMeal(null);
+                setMealData({
+                    clerkUserId: userId || '',
+                    foodName: result.data.foodName || '',
+                    mealType: result.data.mealType || 'Lunch',
+                    calories: result.data.calories || 0,
+                    protein: result.data.protein || 0,
+                    carbs: result.data.carbs || 0,
+                    fat: result.data.fat || 0,
+                    servingSize: result.data.servingSize || '1 plate',
+                    weightGrams: result.data.weightGrams || 0,
+                    source: 'ai',
+                    ingredients: result.data.ingredients || [],
+                });
+                setCapturedImage(null);
+                setNavModalStep('CLOSED');
+                setActiveView('EDIT_PAGE');
+            }
+        } catch (err) {
+            console.error('Error analyzing image:', err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const hasChanges = selectedMeal !== null && (
-        formData.foodName !== selectedMeal.foodName ||
-        formData.mealType !== selectedMeal.mealType ||
-        formData.calories !== String(selectedMeal.calories) ||
-        formData.protein !== String(selectedMeal.protein) ||
-        formData.carbs !== String(selectedMeal.carbs) ||
-        formData.fat !== String(selectedMeal.fat) ||
-        formData.weightGrams !== (
-            selectedMeal.weightGrams != null
-                ? String(selectedMeal.weightGrams)
-                : ""
-        )
-    );
+    const handleSaveMeal = async (e: React.FormEvent) => {
+        e.preventDefault();
 
+        try {
+            const token = await getToken();
+            if (!token) {
+                alert('Please sign in before saving a meal.');
+                return;
+            }
+
+            const payload = {
+                ...mealData,
+                consumedAt: selecteddate.toISOString(),
+            };
+
+            const res = await fetch('http://localhost:5000/api/meals', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to save meal');
+            }
+
+            const matchedSavedFood = savedFoods.find(
+                (food) =>
+                    food.foodName.trim().toLowerCase() === mealData.foodName.trim().toLowerCase()
+            );
+
+            if (matchedSavedFood) {
+                const valuesDiffer =
+                    Math.abs(matchedSavedFood.calories - mealData.calories) > 0.01 ||
+                    Math.abs(matchedSavedFood.protein - mealData.protein) > 0.01 ||
+                    Math.abs(matchedSavedFood.carbs - mealData.carbs) > 0.01 ||
+                    Math.abs(matchedSavedFood.fat - mealData.fat) > 0.01 ||
+                    (matchedSavedFood.servingSize || '').trim().toLowerCase() !==
+                    (mealData.servingSize || '').trim().toLowerCase();
+
+                if (valuesDiffer) {
+                    setSavedMealConflict({
+                        savedFood: matchedSavedFood,
+                        mealData: { ...mealData },
+                    });
+                    return;
+                }
+            }
+
+            alert('Meal logged successfully!');
+            onNavigate?.('home');
+        } catch (err) {
+            console.error('Failed to log meal:', err);
+            alert('Unable to save meal. Please try again.');
+        }
+    };
+
+    const handleSaveFavorite = async () => {
+        if (!mealData.foodName.trim()) {
+            alert('Please enter a food name.');
+            return;
+        }
+        if (!Number.isFinite(mealData.calories) || mealData.calories < 0) {
+            alert('Please enter a valid calorie amount.');
+            return;
+        }
+
+        try {
+            const token = await getToken();
+            if (!token) {
+                alert('Please sign in before saving a favorite.');
+                return;
+            }
+
+            const response = await fetch('http://localhost:5000/api/saved-foods', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    foodName: mealData.foodName,
+                    calories: mealData.calories,
+                    protein: mealData.protein,
+                    carbs: mealData.carbs,
+                    fat: mealData.fat,
+                    servingSize: mealData.servingSize || '1 serving',
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to save favorite.');
+            }
+
+            setRefreshSavedFoods((prev) => prev + 1);
+            alert('Food saved to favorites successfully!');
+        } catch (error) {
+            console.error('Error saving favorite:', error);
+            alert('Unable to save favorite. Please try again.');
+        }
+    };
+
+    const handleSelectLoggedMeal = (meal: SavedMeal) => {
+        setSelectedMeal(meal);
+
+        setMealData({
+            foodName: meal.foodName,
+            mealType: meal.mealType as MealLogForm['mealType'],
+            calories: meal.calories,
+            protein: meal.protein,
+            carbs: meal.carbs,
+            fat: meal.fat,
+            servingSize: meal.servingSize || '1 serving',
+            weightGrams: meal.weightGrams ?? 0,
+            source: 'manual',
+            ingredients: meal.ingredients || [],
+        });
+
+        setActiveView('EDIT_PAGE');
+    };
+    const hasChanges = selectedMeal !== null && (
+        mealData.foodName !== selectedMeal.foodName ||
+        mealData.mealType !== selectedMeal.mealType ||
+        mealData.calories !== selectedMeal.calories ||
+        mealData.protein !== selectedMeal.protein ||
+        mealData.carbs !== selectedMeal.carbs ||
+        mealData.fat !== selectedMeal.fat ||
+        mealData.servingSize !== (selectedMeal.servingSize || '1 serving') ||
+        mealData.weightGrams !== (selectedMeal.weightGrams ?? 0)
+    );
     const handleSaveChanges = async () => {
         if (!selectedMeal || !hasChanges || savingMeal) return;
 
-        const numericFields = [
-            formData.calories,
-            formData.protein,
-            formData.carbs,
-            formData.fat,
-        ];
-
         if (
-            !formData.foodName.trim() ||
-            numericFields.some((value) =>
-                value.trim() === "" ||
-                !Number.isFinite(Number(value)) ||
-                Number(value) < 0
-            ) ||
-            (
-                formData.weightGrams.trim() !== "" &&
-                (
-                    !Number.isFinite(Number(formData.weightGrams)) ||
-                    Number(formData.weightGrams) < 0
-                )
-            )
+            !mealData.foodName.trim() ||
+            [mealData.calories, mealData.protein, mealData.carbs, mealData.fat]
+                .some(value => !Number.isFinite(value) || value < 0)
         ) {
-            alert("Please enter a food name and valid non-negative nutrition values.");
+            alert('Please enter valid meal information.');
             return;
         }
 
@@ -172,58 +371,57 @@ function Meallog({ onNavigate }: MeallogProps) {
             const token = await getToken();
 
             if (!token) {
-                throw new Error("Please sign in to update your meal.");
+                throw new Error('Please sign in to update your meal.');
             }
 
             const response = await fetch(
                 `http://localhost:5000/api/meals/${selectedMeal._id}`,
                 {
-                    method: "PUT",
+                    method: 'PUT',
                     headers: {
-                        "Content-Type": "application/json",
+                        'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
-                        foodName: formData.foodName.trim(),
-                        mealType: formData.mealType,
-                        calories: Number(formData.calories),
-                        protein: Number(formData.protein),
-                        carbs: Number(formData.carbs),
-                        fat: Number(formData.fat),
-                        weightGrams: formData.weightGrams.trim() === ""
-                            ? null
-                            : Number(formData.weightGrams),
+                        foodName: mealData.foodName.trim(),
+                        mealType: mealData.mealType,
+                        calories: mealData.calories,
+                        protein: mealData.protein,
+                        carbs: mealData.carbs,
+                        fat: mealData.fat,
+                        servingSize: mealData.servingSize,
+                        weightGrams: mealData.weightGrams,
+                        ingredients: mealData.ingredients,
                     }),
                 }
             );
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || "Failed to update meal.");
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error || 'Failed to update meal.');
             }
 
-            const updatedMeal: LoggedMeal = await response.json();
+            const updatedMeal: SavedMeal = await response.json();
 
-            setLoggedMeals((previous) =>
-                previous.map((meal) =>
+            setSavedMeals(previous =>
+                previous.map(meal =>
                     meal._id === updatedMeal._id ? updatedMeal : meal
                 )
             );
 
-            handleSelectMeal(updatedMeal);
-            alert("Meal updated successfully!");
+            handleSelectLoggedMeal(updatedMeal);
+            alert('Meal updated successfully!');
         } catch (error) {
             alert(
                 error instanceof Error
                     ? error.message
-                    : "Unable to update meal."
+                    : 'Unable to update meal.'
             );
         } finally {
             setSavingMeal(false);
         }
     };
-
-    const handleDeleteMeal = async () => {
+    const handleDeleteLoggedMeal = async () => {
         if (!selectedMeal || deletingMeal) return;
 
         const confirmed = window.confirm(
@@ -238,13 +436,13 @@ function Meallog({ onNavigate }: MeallogProps) {
             const token = await getToken();
 
             if (!token) {
-                throw new Error("Please sign in to delete your meal.");
+                throw new Error('Please sign in to delete your meal.');
             }
 
             const response = await fetch(
                 `http://localhost:5000/api/meals/${selectedMeal._id}`,
                 {
-                    method: "DELETE",
+                    method: 'DELETE',
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -252,205 +450,617 @@ function Meallog({ onNavigate }: MeallogProps) {
             );
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || "Failed to delete meal.");
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error || 'Failed to delete meal.');
             }
 
-            setLoggedMeals((previous) =>
-                previous.filter((meal) => meal._id !== selectedMeal._id)
+            setSavedMeals(previous =>
+                previous.filter(meal => meal._id !== selectedMeal._id)
             );
 
             setSelectedMeal(null);
+            setMealData({ ...DEFAULT_MEAL });
 
-            setFormData({
-                foodName: "",
-                mealType: "Breakfast",
-                calories: "",
-                protein: "",
-                carbs: "",
-                fat: "",
-                fiber: "",
-                weightGrams: "",
-            });
-
-            alert("Meal deleted successfully!");
+            alert('Meal deleted successfully!');
         } catch (error) {
             alert(
                 error instanceof Error
                     ? error.message
-                    : "Unable to delete meal."
+                    : 'Unable to delete meal.'
             );
         } finally {
             setDeletingMeal(false);
         }
     };
-
     const handleCancelChanges = () => {
         if (!selectedMeal) return;
-        handleSelectMeal(selectedMeal);
+        handleSelectLoggedMeal(selectedMeal);
     };
 
-    const now = new Date();
-    const [selecteddate, setselecteddate] = useState(now);
-    function changeDate(amount: any) {
-        const copydate = new Date(selecteddate);
-        copydate.setDate(copydate.getDate() + amount);
-        setselecteddate(copydate);
-    }
-    const changingdate = selecteddate.toLocaleDateString('en-US', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
-    const mealsForSelectedDate = loggedMeals.filter((meal) => {
+    const handleSelectSavedFood = (food: SavedFood) => {
+        setSelectedMeal(null);
+        setMealData({
+            foodName: food.foodName,
+            mealType: 'Lunch',
+            calories: food.calories,
+            protein: food.protein,
+            carbs: food.carbs,
+            fat: food.fat,
+            servingSize: food.servingSize || '1 serving',
+            weightGrams: 0,
+            source: 'manual',
+            ingredients: [],
+        });
+        setActiveView('EDIT_PAGE');
+    };
+
+    const handleEditFavorite = (food: SavedFood) => {
+        setEditingFavorite(food);
+        setEditFavoriteData({ ...food });
+    };
+
+    const handleUpdateFavorite = async () => {
+        if (!editingFavorite || !editFavoriteData) return;
+
+        if (!editFavoriteData.foodName.trim()) {
+            alert('Please enter a food name.');
+            return;
+        }
+
+        if (
+            [
+                editFavoriteData.calories,
+                editFavoriteData.protein,
+                editFavoriteData.carbs,
+                editFavoriteData.fat,
+            ].some((value) => !Number.isFinite(value) || value < 0)
+        ) {
+            alert('Please enter valid nutrition values.');
+            return;
+        }
+
+        try {
+            const token = await getToken();
+            if (!token) {
+                alert('Please sign in before editing a favorite.');
+                return;
+            }
+
+            const response = await fetch(
+                `http://localhost:5000/api/saved-foods/${editingFavorite._id}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        foodName: editFavoriteData.foodName.trim(),
+                        calories: editFavoriteData.calories,
+                        protein: editFavoriteData.protein,
+                        carbs: editFavoriteData.carbs,
+                        fat: editFavoriteData.fat,
+                        servingSize: editFavoriteData.servingSize,
+                    }),
+                }
+            );
+
+            if (!response.ok) throw new Error('Failed to update favorite.');
+
+            setRefreshSavedFoods((prev) => prev + 1);
+            setEditingFavorite(null);
+            setEditFavoriteData(null);
+            alert('Favorite updated successfully!');
+        } catch (error) {
+            console.error('Error updating favorite:', error);
+            alert('Unable to update favorite. Please try again.');
+        }
+    };
+
+    const handleDeleteFavorite = async (food: SavedFood) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete ${food.foodName} from favorites?`
+        );
+        if (!confirmed) return;
+
+        try {
+            const token = await getToken();
+            if (!token) {
+                alert('Please sign in before deleting a favorite.');
+                return;
+            }
+
+            const response = await fetch(
+                `http://localhost:5000/api/saved-foods/${food._id}`,
+                {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            if (!response.ok) throw new Error('Failed to delete favorite.');
+
+            if (editingFavorite?._id === food._id) {
+                setEditingFavorite(null);
+                setEditFavoriteData(null);
+            }
+
+            setRefreshSavedFoods((prev) => prev + 1);
+            alert('Favorite deleted successfully!');
+        } catch (error) {
+            console.error('Error deleting favorite:', error);
+            alert('Unable to delete favorite. Please try again.');
+        }
+    };
+
+    const handleAcceptSavedMealUpdate = async () => {
+        if (!savedMealConflict) return;
+
+        try {
+            setUpdatingSavedMeal(true);
+            const token = await getToken();
+            if (!token) {
+                alert('Please sign in before updating a saved meal.');
+                return;
+            }
+
+            const response = await fetch(
+                `http://localhost:5000/api/saved-foods/${savedMealConflict.savedFood._id}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        foodName: savedMealConflict.mealData.foodName.trim(),
+                        calories: savedMealConflict.mealData.calories,
+                        protein: savedMealConflict.mealData.protein,
+                        carbs: savedMealConflict.mealData.carbs,
+                        fat: savedMealConflict.mealData.fat,
+                        servingSize: savedMealConflict.mealData.servingSize || '1 serving',
+                    }),
+                }
+            );
+
+            if (!response.ok) throw new Error('Failed to update saved meal.');
+
+            setRefreshSavedFoods((prev) => prev + 1);
+            setSavedMealConflict(null);
+            alert('Saved meal updated to match this log.');
+            onNavigate?.('home');
+        } catch (error) {
+            console.error('Error updating saved meal:', error);
+            alert('Unable to update the saved meal right now.');
+        } finally {
+            setUpdatingSavedMeal(false);
+        }
+    };
+
+    const handleCancelSavedMealUpdate = () => {
+        setSavedMealConflict(null);
+        onNavigate?.('home');
+    };
+
+    const mealsForSelectedDate = savedMeals.filter((meal) => {
         return (
             new Date(meal.consumedAt).toDateString() ===
             selecteddate.toDateString()
         );
     });
 
-    const meals = [
-        {id:1, label: 'Food name', placeholder:'Eg: Protein Shake', type:'text'},
-        {id:2, label: 'Calories (kcal)', placeholder:'Eg: 250', type:'number'},
-        {id:3, label: 'Protein (g)', placeholder:'Eg: 23g', type:'number'},
-        {id:4, label: 'Carbs (g)', placeholder:'Eg: 21g', type:'number'},
-        {id:5, label: 'Fat (g)', placeholder:'Eg: 8g', type:'number'},
-        {id:6, label: 'Fiber (g)', placeholder:'Eg: 5g', type:'number'},
-        {id:7, label: 'Serving (g)', placeholder:'Eg: 400g', type:'number'},
-    ]
+    const filteredSavedFoods = savedFoods.filter((food) =>
+        food.foodName.toLowerCase().includes(savedFoodSearch.toLowerCase())
+    );
+
+    const savedMealSuggestions = Array.from(
+        new Map(
+            savedMeals
+                .filter((meal) => typeof meal.foodName === 'string' && meal.foodName.trim())
+                .map((meal) => {
+                    const normalizedName = meal.foodName.trim();
+                    const normalizedIngredients = Array.isArray(meal.ingredients)
+                        ? meal.ingredients.map((ingredient) => ({
+                            name: String(ingredient.name || '').trim(),
+                            quantity: Number(ingredient.quantity) || 0,
+                            unit: String(ingredient.unit || 'g').trim() || 'g',
+                        }))
+                        : [];
+
+                    return [
+                        normalizedName.toLowerCase(),
+                        {
+                            foodName: normalizedName,
+                            calories: Number(meal.calories) || 0,
+                            protein: Number(meal.protein) || 0,
+                            carbs: Number(meal.carbs) || 0,
+                            fat: Number(meal.fat) || 0,
+                            servingSize:
+                                typeof meal.servingSize === 'string' && meal.servingSize
+                                    ? meal.servingSize
+                                    : '1 serving',
+                            ingredients: normalizedIngredients,
+                        },
+                    ];
+                })
+        ).values()
+    );
 
     return (
         <section className="Meallogpage">
-            <div className="Meallogheader"> Edit Meal</div>
-     <div className="DateSwipe">
-        <button className="swipebutton" onClick={() => changeDate(-1)}>
-            <IoIosArrowBack />
-        </button>
-        <p className="Datetext">{changingdate}</p>
-        <button className="swipebutton" onClick={() => changeDate(1)}>
-            <IoIosArrowForward />
-        </button>
-    </div>
-
-            <div className="LoggedMealsList">
-                <h3>Logged Meals</h3>
-
-                {loadingMeals ? (
-                    <p>Loading your meals...</p>
-                ) : mealError ? (
-                    <p role="alert">{mealError}</p>
-                ) : mealsForSelectedDate.length === 0 ? (
-                    <p>No meals logged for this date.</p>
-                ) : (
-                    mealsForSelectedDate.map((meal) => (
-                        <button
-                            key={meal._id}
-                            type="button"
-                            className="LoggedMealItem"
-                            onClick={() => handleSelectMeal(meal)}
-                        >
-                            <span>{meal.foodName}</span>
-                            <span>{meal.calories} kcal</span>
-                        </button>
-                    ))
-                )}
+            <div className="Meallogheader">
+                {activeView === 'SAVED_MEALS' ? 'Saved Meals' : 'Edit Meal'}
             </div>
 
-
-            <select
-                className="Mealtype"
-                value={formData.mealType}
-                onChange={(event) =>
-                    setFormData((previous) => ({
-                        ...previous,
-                        mealType: event.target.value,
-                    }))
-                }
-            >
-                <option value="Breakfast">Breakfast</option>
-                <option value="Lunch">Lunch</option>
-                <option value="Dinner">Dinner</option>
-                <option value="Snack">Snacks</option>
-                <option value="Drinks">Drinks</option>
-            </select>
-            <div className="Logbubble">
-   <ul className="Bubblecontent">
-       {meals.map(meal => (
-           <li className="Formrow" key={meal.id}>
-               <label className="Formlabel">{meal.label}</label>
-               <input
-                   className="Forminput"
-                   type={meal.type}
-                   placeholder={meal.placeholder}
-                   value={
-                       meal.id === 1 ? formData.foodName :
-                           meal.id === 2 ? formData.calories :
-                               meal.id === 3 ? formData.protein :
-                                   meal.id === 4 ? formData.carbs :
-                                       meal.id === 5 ? formData.fat :
-                                           meal.id === 6 ? formData.fiber :
-                                               formData.weightGrams
-                   }
-                   onChange={(event) => {
-                       const field = (
-                           meal.id === 1 ? "foodName" :
-                               meal.id === 2 ? "calories" :
-                                   meal.id === 3 ? "protein" :
-                                       meal.id === 4 ? "carbs" :
-                                           meal.id === 5 ? "fat" :
-                                               meal.id === 6 ? "fiber" :
-                                                   "weightGrams"
-                       );
-
-                       setFormData((previous) => ({
-                           ...previous,
-                           [field]: event.target.value,
-                       }));
-                   }}
-               />
-           </li>
-       ))}
-   </ul>
+            <div className="DateSwipe">
+                <button className="swipebutton" onClick={() => changeDate(-1)}>
+                    <IoIosArrowBack />
+                </button>
+                <p className="Datetext">{changingdate}</p>
+                <button className="swipebutton" onClick={() => changeDate(1)}>
+                    <IoIosArrowForward />
+                </button>
             </div>
-            {selectedMeal && (
-                <>
-                    {hasChanges && (
-                        <>
+
+            {/* Saved Meals Selection View */}
+            {activeView === 'SAVED_MEALS' && (
+                <div className="Logbubble pink-saved-box">
+                    <div className="saved-food-search">
+                        <input
+                            type="search"
+                            placeholder="Search for your saved meals"
+                            value={savedFoodSearch}
+                            onChange={(e) => setSavedFoodSearch(e.target.value)}
+                        />
+                    </div>
+
+                    {editingFavorite && editFavoriteData && (
+                        <div className="saved-food-edit-form">
+                            <h4>Edit Favorite</h4>
+                            <div className="form-group">
+                                <label htmlFor="edit-food-name">Food Name</label>
+                                <input
+                                    id="edit-food-name"
+                                    type="text"
+                                    value={editFavoriteData.foodName}
+                                    onChange={(e) =>
+                                        setEditFavoriteData({
+                                            ...editFavoriteData,
+                                            foodName: e.target.value,
+                                        })
+                                    }
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="edit-calories">Calories</label>
+                                <input
+                                    id="edit-calories"
+                                    type="number"
+                                    value={editFavoriteData.calories}
+                                    onChange={(e) =>
+                                        setEditFavoriteData({
+                                            ...editFavoriteData,
+                                            calories: Number(e.target.value),
+                                        })
+                                    }
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="edit-protein">Protein (g)</label>
+                                <input
+                                    id="edit-protein"
+                                    type="number"
+                                    value={editFavoriteData.protein}
+                                    onChange={(e) =>
+                                        setEditFavoriteData({
+                                            ...editFavoriteData,
+                                            protein: Number(e.target.value),
+                                        })
+                                    }
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="edit-carbs">Carbs (g)</label>
+                                <input
+                                    id="edit-carbs"
+                                    type="number"
+                                    value={editFavoriteData.carbs}
+                                    onChange={(e) =>
+                                        setEditFavoriteData({
+                                            ...editFavoriteData,
+                                            carbs: Number(e.target.value),
+                                        })
+                                    }
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="edit-fat">Fat (g)</label>
+                                <input
+                                    id="edit-fat"
+                                    type="number"
+                                    value={editFavoriteData.fat}
+                                    onChange={(e) =>
+                                        setEditFavoriteData({
+                                            ...editFavoriteData,
+                                            fat: Number(e.target.value),
+                                        })
+                                    }
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="edit-serving">Serving Size</label>
+                                <input
+                                    id="edit-serving"
+                                    type="text"
+                                    value={editFavoriteData.servingSize}
+                                    onChange={(e) =>
+                                        setEditFavoriteData({
+                                            ...editFavoriteData,
+                                            servingSize: e.target.value,
+                                        })
+                                    }
+                                />
+                            </div>
                             <button
+                                type="button"
                                 className="Savebutton"
-                                onClick={handleSaveChanges}
-                                disabled={savingMeal || deletingMeal}
+                                onClick={handleUpdateFavorite}
                             >
-                                {savingMeal ? "Saving..." : "Save changes"}
+                                Save Favorite
                             </button>
-
                             <button
+                                type="button"
                                 className="Cancelbutton"
-                                onClick={handleCancelChanges}
-                                disabled={savingMeal || deletingMeal}
+                                onClick={() => {
+                                    setEditingFavorite(null);
+                                    setEditFavoriteData(null);
+                                }}
                             >
-                                Cancel
+                                Cancel Edit
                             </button>
-                        </>
+                        </div>
                     )}
 
-                    <button
-                        className="Deletebutton"
-                        onClick={handleDeleteMeal}
-                        disabled={savingMeal || deletingMeal}
-                    >
-                        {deletingMeal ? "Deleting..." : "Delete this meal"}
-                    </button>
-                </>
+                    <ul className="Bubblecontent">
+                        {filteredSavedFoods.map((food) => (
+                            <li className="Formrow" key={food._id}>
+                                <div
+                                    style={{ cursor: 'pointer', flex: 1 }}
+                                    onClick={() => handleSelectSavedFood(food)}
+                                >
+                                    <strong>{food.foodName}</strong>
+                                    <p>
+                                        {food.calories} kcal • {food.protein}g P • {food.carbs}g C •{' '}
+                                        {food.fat}g F
+                                    </p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleEditFavorite(food)}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDeleteFavorite(food)}
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             )}
+
+            {/* Previously Logged Meals */}
+            {/* Previously Logged Meals */}
+            {activeView === 'EDIT_PAGE' && mealsForSelectedDate.length > 0 && (
+                <div className="Logbubble">
+                    <h3 className="logged-meals-heading">Logged Meals</h3>
+
+                    <div className="logged-meals-list">
+                        {mealsForSelectedDate.map((meal) => (
+                            <button
+                                key={meal._id}
+                                type="button"
+                                className={`logged-meal-item ${
+                                    selectedMeal?._id === meal._id ? 'selected' : ''
+                                }`}
+                                onClick={() => handleSelectLoggedMeal(meal)}
+                            >
+                    <span className="logged-meal-name">
+                        {meal.foodName}
+                    </span>
+
+                                <span className="logged-meal-calories">
+                        {meal.calories} kcal
+                    </span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Meal Details Form (Pre-filled from AIphoto, Saved Meal, or blank Manual) */}
+            {/* Meal Details Form */}
+            {activeView === 'EDIT_PAGE' && (
+                <div className="Logbubble">
+                    <MealDetails
+                        mealData={mealData}
+                        setMealData={setMealData}
+                        onSubmit={
+                            selectedMeal
+                                ? (e: React.FormEvent) => {
+                                    e.preventDefault();
+                                    handleSaveChanges();
+                                }
+                                : handleSaveMeal
+                        }
+                        onSaveFavorite={handleSaveFavorite}
+                        savedMealSuggestions={savedMealSuggestions}
+                    />
+
+                    {selectedMeal && (
+                        <div className="logged-meal-actions">
+                            {hasChanges && (
+                                <button
+                                    type="button"
+                                    className="Savebutton"
+                                    onClick={handleSaveChanges}
+                                    disabled={savingMeal || deletingMeal}
+                                >
+                                    {savingMeal ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            )}
+
+                            {hasChanges && (
+                                <button
+                                    type="button"
+                                    className="Cancelbutton"
+                                    onClick={handleCancelChanges}
+                                    disabled={savingMeal || deletingMeal}
+                                >
+                                    Cancel Changes
+                                </button>
+                            )}
+
+                            <button
+                                type="button"
+                                className="Deletebutton"
+                                onClick={handleDeleteLoggedMeal}
+                                disabled={savingMeal || deletingMeal}
+                            >
+                                {deletingMeal ? 'Deleting...' : 'Delete Meal'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <button
+                type="button"
+                className="Cancelbutton"
+                onClick={() => onNavigate?.('home')}
+            >
+                Cancel
+            </button>
+
+            {/* Popout Menu if user clicks '+' while on MealLog */}
+            {navModalStep !== 'CLOSED' && (
+                <div className="modal-overlay">
+                    <div className="pink-bubble-modal">
+                        <button
+                            className="close-bubble-btn"
+                            onClick={() => {
+                                setNavModalStep('CLOSED');
+                                setCapturedImage(null);
+                            }}
+                        >
+                            ✕
+                        </button>
+
+                        {navModalStep === 'MENU' && (
+                            <AddMealMenu
+                                onSelectAI={() => {
+                                    setCapturedImage(null);
+                                    setNavModalStep('CAMERA');
+                                }}
+                                onSelectManual={() => {
+                                    setSelectedMeal(null);
+                                    setMealData({ ...DEFAULT_MEAL });
+                                    setActiveView('EDIT_PAGE');
+                                    setNavModalStep('CLOSED');
+                                }}
+                                onSelectSaved={() => {
+                                    setActiveView('SAVED_MEALS');
+                                    setNavModalStep('CLOSED');
+                                }}
+                            />
+                        )}
+
+                        {navModalStep === 'CAMERA' && (
+                            <CameraScanner
+                                capturedImage={capturedImage}
+                                loading={loading}
+                                onCapture={(src) => setCapturedImage(src)}
+                                onRetake={() => setCapturedImage(null)}
+                                onAnalyze={analyzePhotoOnMealLog}
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Saved Meal Conflict Prompt */}
+            {savedMealConflict && (
+                <div className="modal-overlay">
+                    <div className="pink-bubble-modal saved-meal-update-prompt">
+                        <button
+                            className="close-bubble-btn"
+                            onClick={handleCancelSavedMealUpdate}
+                        >
+                            ✕
+                        </button>
+
+                        <h3>Update Saved Meal?</h3>
+                        <p>
+                            There is already a saved meal named "
+                            {savedMealConflict.savedFood.foodName}". Its nutrition values are
+                            different from this meal log. Would you like to update the saved meal
+                            to match the current log?
+                        </p>
+
+                        <div className="saved-meal-update-grid">
+                            <div className="saved-meal-update-card">
+                                <span>Saved Meal</span>
+                                <strong>{savedMealConflict.savedFood.calories} kcal</strong>
+                                <small>
+                                    {savedMealConflict.savedFood.protein}g protein •{' '}
+                                    {savedMealConflict.savedFood.carbs}g carbs •{' '}
+                                    {savedMealConflict.savedFood.fat}g fat
+                                </small>
+                            </div>
+
+                            <div className="saved-meal-update-card">
+                                <span>Current Log</span>
+                                <strong>{savedMealConflict.mealData.calories} kcal</strong>
+                                <small>
+                                    {savedMealConflict.mealData.protein}g protein •{' '}
+                                    {savedMealConflict.mealData.carbs}g carbs •{' '}
+                                    {savedMealConflict.mealData.fat}g fat
+                                </small>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="bubbly-primary-btn"
+                            onClick={handleAcceptSavedMealUpdate}
+                            disabled={updatingSavedMeal}
+                        >
+                            {updatingSavedMeal ? 'Updating...' : 'Update saved meal'}
+                        </button>
+
+                        <button
+                            type="button"
+                            className="bubbly-secondary-btn"
+                            onClick={handleCancelSavedMealUpdate}
+                        >
+                            Keep previous saved data
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <NavBar
-                onOpenMenu={() => {}}
+                onOpenMenu={() => setNavModalStep('MENU')}
                 onNavigate={onNavigate}
                 currentPage="meallog"
             />
         </section>
-    )
+    );
 }
 
 export default Meallog;

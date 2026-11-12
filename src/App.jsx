@@ -6,6 +6,7 @@ import './pages/HomePage.css'; // Ensures modal-overlay and pink-bubble-modal st
 import HomePage from './pages/HomePage.tsx';
 import Settingspage from './pages/Settingspage.tsx';
 import Meallog from './pages/Meallog.tsx';
+import ProfilePage from './pages/ProfilePage.tsx';
 
 function App() {
     const [currentPage, setCurrentPage] = useState('home');
@@ -18,6 +19,8 @@ function App() {
                 <Settingspage onNavigate={setCurrentPage} />
             ) : currentPage === 'meallog' ? (
                 <Meallog onNavigate={setCurrentPage} />
+            ) : currentPage === 'profile' ? (
+                <ProfilePage onNavigate={setCurrentPage} />
             ) : (
                 <HomePage onNavigate={setCurrentPage} />
             )}

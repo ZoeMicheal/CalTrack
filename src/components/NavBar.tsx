@@ -39,7 +39,13 @@ function NavBar({ onOpenMenu, onNavigate, currentPage }: NavBarProps) {
                     <IoMdSettings />
                     <p>Settings</p>
                 </button>
-                <button className="Buttontype1"><IoPerson /><p>Profile</p></button>
+                <button
+                    className={`Buttontype1 ${currentPage === 'profile' ? 'active' : ''}`}
+                    onClick={() => onNavigate?.('profile')}
+                >
+                    <IoPerson />
+                    <p>Profile</p>
+                </button>
             </nav>
         </section>
     );

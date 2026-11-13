@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import GoalsPage from './GoalsPage';
+import AppearancePage from './AppearancePage';
 import NavBar from '../components/NavBar';
 import './Settingspage.css';
 import { IoIosArrowForward } from "react-icons/io";
@@ -12,6 +13,8 @@ interface SettingspageProps {
 function Settingspage({ onNavigate }: SettingspageProps) {
     const [showGoals, setShowGoals] = useState(false);
 
+    const [showAppearance, setShowAppearance] = useState(false);
+
     if (showGoals) {
         return (
             <GoalsPage
@@ -20,6 +23,16 @@ function Settingspage({ onNavigate }: SettingspageProps) {
             />
         );
     }
+
+    if (showAppearance) {
+        return (
+            <AppearancePage
+                onBack={() => setShowAppearance(false)}
+                onNavigate={onNavigate}
+            />
+        );
+    }
+
     const settings = [
         { id: 1, label: 'Goals' },
         { id: 2, label: 'Appearance' },
@@ -39,6 +52,8 @@ function Settingspage({ onNavigate }: SettingspageProps) {
                  onClick={() => {
                      if (settings.label === 'Goals') {
                          setShowGoals(true);
+                     } else if (settings.label === 'Appearance') {
+                         setShowAppearance(true);
                      }
                  }}
              >

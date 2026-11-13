@@ -203,3 +203,44 @@
     font-weight: 700;
     line-height: 1.5;
 }
+
+
+/* Dark Pink Theme — Profile */
+:root[data-theme="dark"] .ProfilePage {
+    background-color: var(--bg);
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .profile-calendar-shell,
+:root[data-theme="dark"] .profile-calendar-banner-text,
+:root[data-theme="dark"] .profile-summary-card,
+:root[data-theme="dark"] .profile-month-button {
+    background-color: var(--surface);
+    color: var(--text-h);
+    border-color: var(--border);
+}
+
+:root[data-theme="dark"] .calendar-day,
+:root[data-theme="dark"] .calendar-day.in-month,
+:root[data-theme="dark"] .calendar-day.out-of-month,
+:root[data-theme="dark"] .calendar-day.past-day {
+    background-color: var(--surface-soft);
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .calendar-day.future-day {
+    background-color: #51243b;
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .calendar-day.current-day {
+    background-color: #ad6686;
+    color: white;
+    border-color: #ffb1d0;
+}
+
+:root[data-theme="dark"] .profile-name,
+:root[data-theme="dark"] .weekday-label,
+:root[data-theme="dark"] .profile-summary-card p {
+    color: #ffb1d0;
+}

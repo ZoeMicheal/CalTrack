@@ -282,3 +282,55 @@
     white-space: nowrap;
     font-weight: 500;
 }
+
+
+/* Allowing the bottom of Meal Log to scroll completely above the navbar */
+.Meallogpage {
+    padding-bottom: 120px;
+    box-sizing: border-box;
+}
+
+
+/* Dark Pink Theme — Meal Log */
+:root[data-theme="dark"] .Meallogpage {
+    background-color: var(--bg);
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .Meallogheader,
+:root[data-theme="dark"] .Datetext,
+:root[data-theme="dark"] .Mealtype,
+:root[data-theme="dark"] .Bubblecontent,
+:root[data-theme="dark"] .Cancelbutton,
+:root[data-theme="dark"] .LoggedMealsList {
+    background-color: var(--surface);
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .Formlabel,
+:root[data-theme="dark"] .LoggedMealsList p {
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .Forminput,
+:root[data-theme="dark"] .LoggedMealItem,
+:root[data-theme="dark"] .logged-meal-item {
+    background-color: var(--surface-soft);
+    color: var(--text-h);
+    border-color: var(--border);
+}
+
+:root[data-theme="dark"] .LoggedMealItem:hover,
+:root[data-theme="dark"] .logged-meal-item:hover {
+    background-color: #393039;
+}
+
+:root[data-theme="dark"] .logged-meal-item.selected {
+    background-color: #51243b;
+    border-color: #ff8fb1;
+}
+
+:root[data-theme="dark"] .LoggedMealsList h3,
+:root[data-theme="dark"] .logged-meals-heading {
+    color: #ff8fb1;
+}

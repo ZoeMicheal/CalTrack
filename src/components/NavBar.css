@@ -30,3 +30,23 @@
     height: 75px;
     width: 75px;
 }
+
+
+/* Dark Pink Theme — Navigation */
+:root[data-theme="dark"] .NavBar {
+    background-color: var(--surface);
+}
+
+:root[data-theme="dark"] .Buttontype1 {
+    color: #d9c2ce;
+}
+
+:root[data-theme="dark"] .Buttontype1.active {
+    color: #ff8fb1;
+}
+
+:root[data-theme="dark"] .Buttontype2 {
+    background-color: #a52685;
+    color: white;
+    border-color: #ffb1d0;
+}

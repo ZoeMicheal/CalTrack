@@ -1,6 +1,4 @@
-
 /* Zoe: Goals page layout */
-
 .goals-form {
     width: calc(100% - 50px);
     max-width: none;
@@ -100,4 +98,99 @@
         padding: 20px;
         border-radius: 20px;
     }
+}
+
+
+/* Dark Pink Theme - Goals Page */
+
+:root[data-theme="dark"] .goals-form {
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .goal-card {
+    background-color: var(--surface);
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .goal-card h3 {
+    color: #ff8fb1;
+}
+
+:root[data-theme="dark"] .goal-card p {
+    color: #e7bdce;
+}
+
+:root[data-theme="dark"] .goal-card label {
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .goal-card input,
+:root[data-theme="dark"] .goal-card select {
+    background-color: var(--surface-soft);
+    color: var(--text-h);
+    border-color: #c7799a;
+}
+
+:root[data-theme="dark"] .goal-card input:focus,
+:root[data-theme="dark"] .goal-card select:focus {
+    border-color: #ff8fb1;
+}
+
+:root[data-theme="dark"] .goals-save-btn {
+    background-color: #e75480;
+    color: white;
+}
+
+:root[data-theme="dark"] .goals-save-btn:hover {
+    background-color: #d63d6d;
+}
+
+
+/* GOALS PAGE — LIGHT AND DARK THEME */
+
+/* Page background */
+.SettingsPage:has(.goals-form) {
+    background-color: var(--bg) !important;
+    color: var(--text-h);
+    min-height: 100vh;
+}
+
+/* Goal cards */
+.goal-card {
+    background-color: var(--surface);
+    color: var(--text-h);
+}
+
+/* Text inside cards */
+.goal-card label {
+    color: var(--text-h);
+}
+
+/* Inputs stay white in light mode */
+.goal-card input,
+.goal-card select {
+    background-color: var(--surface);
+    color: var(--text-h);
+}
+
+/* Dark theme — black cards */
+:root[data-theme="dark"] .goal-card {
+    background-color: #17141a;
+    color: white;
+}
+
+:root[data-theme="dark"] .goal-card input,
+:root[data-theme="dark"] .goal-card select {
+    background-color: #252027;
+    color: white;
+}
+
+/* Dark theme — readable labels */
+:root[data-theme="dark"] .goal-card label {
+    color: white;
+}
+
+/* Dark theme — readable back arrow */
+:root[data-theme="dark"] .SettingsPage:has(.goals-form) button[aria-label="Back to Settings"] {
+    color: white !important;
 }

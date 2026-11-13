@@ -23,7 +23,10 @@ function NavBar({ onOpenMenu, onNavigate, currentPage }: NavBarProps) {
                     <p>Home</p>
                 </button>
 
-                <button className="Buttontype1" onClick={() => onNavigate?.('meallog')}>
+                <button
+                    className={`Buttontype1 ${currentPage === 'meallog' ? 'active' : ''}`}
+                    onClick={() => onNavigate?.('meallog')}
+                >
                     <GiMeal />
                     <p>Meal log</p>
                 </button>

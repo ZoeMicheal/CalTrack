@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SignedOut, SignInButton, SignUpButton } from '@clerk/clerk-react';
 import './App.css';
 import './pages/HomePage.css'; // Ensures modal-overlay and pink-bubble-modal styles load globally
@@ -10,6 +10,16 @@ import ProfilePage from './pages/ProfilePage.tsx';
 
 function App() {
     const [currentPage, setCurrentPage] = useState('home');
+
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('caltrack-theme');
+        const theme = ['light', 'dark', 'system'].includes(savedTheme)
+            ? savedTheme
+            : 'system';
+
+        document.documentElement.setAttribute('data-theme', theme);
+    }, []);
+
 
     return (
         <section className="App">

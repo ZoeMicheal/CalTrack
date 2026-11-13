@@ -674,3 +674,70 @@ body {
     color: #e75480;
     margin-bottom: 15px;
 }
+
+
+/* Dark Pink Theme — Home */
+:root[data-theme="dark"] .HomePage {
+    background-color: var(--bg);
+}
+
+:root[data-theme="dark"] .HomePage p {
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .Dateheader,
+:root[data-theme="dark"] .DashboardBubble,
+:root[data-theme="dark"] .Datetext,
+:root[data-theme="dark"] .swipebutton,
+:root[data-theme="dark"] .MeallogTags {
+    background-color: var(--surface);
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .Piehole {
+    background-color: var(--surface);
+}
+
+:root[data-theme="dark"] .Percentbubble {
+    background-color: var(--surface-soft);
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .divider,
+:root[data-theme="dark"] .Horizontaldivider {
+    background-color: #f4cfdf;
+}
+
+/* Home popups and saved meals */
+:root[data-theme="dark"] .pink-bubble-modal,
+:root[data-theme="dark"] .saved-food-card,
+:root[data-theme="dark"] .saved-food-edit-form,
+:root[data-theme="dark"] .vertical-macro-card,
+:root[data-theme="dark"] .saved-meal-update-card {
+    background-color: var(--surface);
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .bubbly-menu-btn,
+:root[data-theme="dark"] .bubbly-secondary-btn,
+:root[data-theme="dark"] .saved-food-search,
+:root[data-theme="dark"] .form-group input,
+:root[data-theme="dark"] .form-group select,
+:root[data-theme="dark"] .meal-name-suggestions {
+    background-color: var(--surface-soft);
+    color: var(--text-h);
+}
+
+:root[data-theme="dark"] .saved-food-macros div {
+    background-color: var(--surface-soft);
+}
+
+:root[data-theme="dark"] .saved-food-header h4,
+:root[data-theme="dark"] .saved-food-macros strong,
+:root[data-theme="dark"] .saved-meal-update-prompt p,
+:root[data-theme="dark"] .saved-meal-update-card small,
+:root[data-theme="dark"] .saved-food-search input,
+:root[data-theme="dark"] .meal-name-suggestion-btn {
+    color: var(--text-h);
+}
+

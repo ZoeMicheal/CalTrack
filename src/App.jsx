@@ -7,6 +7,8 @@ import HomePage from './pages/HomePage.tsx';
 import Settingspage from './pages/Settingspage.tsx';
 import Meallog from './pages/Meallog.tsx';
 import ProfilePage from './pages/ProfilePage.tsx';
+import ToastNotification from './components/ToastNotification';
+import CalTrackDialog from './components/CalTrackDialog';
 
 function App() {
     const [currentPage, setCurrentPage] = useState('home');
@@ -23,6 +25,8 @@ function App() {
 
     return (
         <section className="App">
+            <CalTrackDialog />
+            <ToastNotification />
             {currentPage === 'home' ? (
                 <HomePage onNavigate={setCurrentPage} />
             ) : currentPage === 'settings' ? (

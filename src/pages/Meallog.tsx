@@ -6,6 +6,7 @@ import { MealLogForm } from '../types/meal';
 import { AddMealMenu } from '../components/AddMealMenu';
 import { CameraScanner } from '../components/CameraScanner';
 import { MealDetails } from '../components/MealDetails';
+import { caltrackAlert, caltrackConfirm } from '../components/CalTrackDialog';
 import './Meallog.css';
 import './HomePage.css';
 
@@ -281,7 +282,7 @@ function Meallog({ onNavigate }: MeallogProps) {
 
     const handleSaveFavorite = async () => {
         if (!mealData.foodName.trim()) {
-            alert('Please enter a food name.');
+            caltrackAlert('Please enter a food name.');
             return;
         }
         if (!Number.isFinite(mealData.calories) || mealData.calories < 0) {
@@ -558,7 +559,7 @@ function Meallog({ onNavigate }: MeallogProps) {
     };
 
     const handleDeleteFavorite = async (food: SavedFood) => {
-        const confirmed = window.confirm(
+        const confirmed = await caltrackConfirm(
             `Are you sure you want to delete ${food.foodName} from favorites?`
         );
         if (!confirmed) return;
@@ -821,28 +822,58 @@ function Meallog({ onNavigate }: MeallogProps) {
                         </div>
                     )}
 
-                    <ul className="Bubblecontent">
+                    <ul className="saved-favorites-list">
                         {filteredSavedFoods.map((food) => (
-                            <li className="Formrow" key={food._id}>
-                                <div
-                                    style={{ cursor: 'pointer', flex: 1 }}
-                                    onClick={() => handleSelectSavedFood(food)}
-                                >
-                                    <strong>{food.foodName}</strong>
-                                    <p>
-                                        {food.calories} kcal • {food.protein}g P • {food.carbs}g C •{' '}
-                                        {food.fat}g F
-                                    </p>
-                                </div>
-                                <div style={{ display: 'flex', gap: '8px' }}>
+                            <li className="saved-favorite-card" key={food._id}>
+                                <div className="saved-favorite-header">
                                     <button
                                         type="button"
+                                        className="saved-favorite-name"
+                                        onClick={() => handleSelectSavedFood(food)}
+                                        title="Select this saved meal"
+                                    >
+
+                                        <span className="saved-favorite-title">
+                        <strong>{food.foodName}</strong>
+                        <small>Saved Favorite</small>
+                    </span>
+                                    </button>
+                                </div>
+
+                                <div className="saved-favorite-macros">
+                                    <div className="saved-macro">
+                                        <strong>{food.calories}</strong>
+                                        <span>Calories</span>
+                                    </div>
+
+                                    <div className="saved-macro">
+                                        <strong>{food.protein}g</strong>
+                                        <span>Protein</span>
+                                    </div>
+
+                                    <div className="saved-macro">
+                                        <strong>{food.carbs}g</strong>
+                                        <span>Carbs</span>
+                                    </div>
+
+                                    <div className="saved-macro">
+                                        <strong>{food.fat}g</strong>
+                                        <span>Fat</span>
+                                    </div>
+                                </div>
+
+                                <div className="saved-favorite-actions">
+                                    <button
+                                        type="button"
+                                        className="saved-favorite-edit"
                                         onClick={() => handleEditFavorite(food)}
                                     >
-                                        Edit
+                                        Edit Meal
                                     </button>
+
                                     <button
                                         type="button"
+                                        className="saved-favorite-delete"
                                         onClick={() => handleDeleteFavorite(food)}
                                     >
                                         Delete

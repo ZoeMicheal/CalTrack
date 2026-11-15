@@ -5,11 +5,15 @@
     margin-right: 25px;
 }
 .Meallogheader {
+    position: relative;
+    background-color: var(--surface);
+    color: var(--text-h);
     color: black;
     margin-top: 0px;
     padding: 15px;
-    font-weight: bold;
-    font-size: 25px;
+    text-align: center;
+    border-radius: 15px;
+    margin: 20px 25px 0;
 }
 
 .DateSwipe {
@@ -77,7 +81,7 @@
 }
 
 .Savebutton{
-    background-color: purple;
+    background-color: #e4587d;
     border: none;
     margin-left: 25px;
     margin-right: 25px;
@@ -337,4 +341,186 @@
 :root[data-theme="dark"] .LoggedMealsList h3,
 :root[data-theme="dark"] .logged-meals-heading {
     color: #ff8fb1;
+}
+
+
+/* SAVED FAVORITES REDESIGN */
+
+.saved-favorites-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.saved-favorite-card {
+    background: var(--surface);
+    border-radius: 24px;
+    padding: 22px;
+    color: var(--text-h);
+    text-align: left;
+    border: 1px solid var(--border);
+}
+
+.saved-favorite-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.saved-favorite-name {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: transparent;
+    border: none;
+    color: var(--text-h);
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+    width: 100%;
+}
+
+.saved-favorite-icon {
+    background: var(--surface-soft);
+    color: #b94f80;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.saved-favorite-title {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.saved-favorite-title strong {
+    font-size: 19px;
+    color: var(--text-h);
+}
+
+.saved-favorite-title small {
+    font-size: 12px;
+    color: var(--text);
+}
+
+.saved-favorite-macros {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.saved-macro {
+    background: var(--surface-soft);
+    border-radius: 14px;
+    padding: 14px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+}
+
+.saved-macro strong {
+    color: var(--text-h);
+    font-size: 18px;
+}
+
+.saved-macro span {
+    color: var(--text);
+    font-size: 12px;
+}
+
+.saved-favorite-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.saved-favorite-actions button {
+    flex: 1;
+    border-radius: 25px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.saved-favorite-edit {
+    background: var(--surface-soft);
+    border: 1px solid #e8a6c0;
+    color: #963565;
+}
+
+.saved-favorite-delete {
+    background: #fff0f2;
+    border: 1px solid #efb4bf;
+    color: #b43b51;
+}
+
+.saved-favorite-edit:hover {
+    background: #fbd8e7;
+}
+
+.saved-favorite-delete:hover {
+    background: #ffe0e5;
+}
+
+/* Dark Pink */
+:root[data-theme="dark"] .saved-favorite-card {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+:root[data-theme="dark"] .saved-favorite-icon,
+:root[data-theme="dark"] .saved-macro {
+    background: var(--surface-soft);
+}
+
+:root[data-theme="dark"] .saved-favorite-edit {
+    background: #392533;
+    color: #ffc0db;
+    border-color: #8c5572;
+}
+
+:root[data-theme="dark"] .saved-favorite-delete {
+    background: #39212a;
+    color: #ffb9c4;
+    border-color: #89505c;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+    .saved-favorite-card {
+        padding: 16px;
+    }
+
+    .saved-favorite-macros {
+        gap: 6px;
+    }
+
+    .saved-macro {
+        padding: 12px 4px;
+    }
+
+    .saved-macro strong {
+        font-size: 15px;
+    }
+
+    .saved-macro span {
+        font-size: 10px;
+    }
+
+    .saved-favorite-actions {
+        gap: 8px;
+    }
 }

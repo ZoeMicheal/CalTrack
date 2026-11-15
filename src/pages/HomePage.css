@@ -6,9 +6,6 @@ body {
     padding-bottom: 90px;
 }
 
-.HomePage p {
-    color: black;
-}
 
 .Dateheader {
     background-color: white;
@@ -18,6 +15,7 @@ body {
     margin-top: 25px;
     padding: 10px;
     display: inline-block;
+    color: black;
 }
 
 .DashboardBubble {
@@ -28,6 +26,7 @@ body {
     margin-right: 25px;
     margin-left: 25px;
     position: relative;
+    color: black;
 }
 
 .Statsrow {
@@ -36,6 +35,7 @@ body {
     align-items: center;
     width: 100%;
     justify-content: space-around;
+    color:black;
 }
 
 .group {
@@ -89,6 +89,7 @@ body {
     background-color: white;
     border-radius: 25px;
     padding: 15px;
+    color:black;
 }
 
 .swipebutton {
@@ -125,6 +126,7 @@ body {
     margin-top: 15px;
     margin-left: 25px;
     margin-right: 25px;
+    color:black;
 }
 
 /* --- PINK BUBBLY MODAL OVERLAY --- */

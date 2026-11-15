@@ -1,0 +1,344 @@
+.SettingsPage.HistoryPage {
+    min-height: 100vh;
+    background-color: var(--bg);
+    color: var(--text-h);
+    padding-bottom: 110px;
+    box-sizing: border-box;
+}
+
+.HistoryHeader {
+    position: relative;
+    background-color: var(--surface);
+    color: var(--text-h);
+    padding: 15px;
+    text-align: center;
+    border-radius: 15px;
+    margin: 20px 25px 0;
+}
+
+.HistoryHeader h2 {
+    margin: 0;
+    font-size: 25px;
+}
+
+.HistoryBack {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-h);
+    font-size: 26px;
+    cursor: pointer;
+}
+
+.HistoryContent {
+    margin: 30px 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    text-align: left;
+}
+
+.HistoryDescription {
+    font-size: 15px;
+    color: var(--text-h);
+    margin: 0;
+}
+
+.HistoryCard {
+    background-color: var(--surface);
+    color: var(--text-h);
+    border-radius: 25px;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.HistoryCard h3 {
+    color: #e75480;
+    font-size: 22px;
+    margin: 0 0 20px;
+}
+
+.HistoryFilter {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.HistoryFilter label {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.HistoryFilter input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px;
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    background-color: var(--surface-soft);
+    color: var(--text-h);
+    font-size: 15px;
+}
+
+.HistoryClearButton {
+    background-color: #e75480;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 12px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.HistoryTotals {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.HistoryTotals div {
+    background-color: var(--surface-soft);
+    border-radius: 18px;
+    padding: 16px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.HistoryTotals strong {
+    font-size: 22px;
+    color: var(--text-h);
+}
+
+.HistoryTotals span {
+    font-size: 13px;
+    color: var(--text);
+}
+
+.HistoryMacroTotals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--text-h);
+}
+
+.HistoryMealList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.HistoryMealItem {
+    background-color: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+}
+
+.HistoryMealTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.HistoryMealTop h4 {
+    font-size: 17px;
+    margin: 0;
+    color: var(--text-h);
+    overflow-wrap: anywhere;
+}
+
+.HistoryMealTop span {
+    color: #e75480;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.HistoryMealDate {
+    font-size: 13px;
+    color: var(--text);
+    margin: 10px 0;
+}
+
+.HistoryMealMacros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-h);
+}
+
+.HistoryGoalsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.HistoryGoalItem {
+    background-color: var(--surface-soft);
+    border-radius: 16px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.HistoryGoalItem span {
+    color: var(--text);
+    font-size: 14px;
+}
+
+.HistoryGoalItem strong {
+    color: var(--text-h);
+    font-size: 15px;
+    text-align: right;
+    text-transform: capitalize;
+}
+
+.HistoryEmpty,
+.HistoryStatus {
+    text-align: center;
+    color: var(--text);
+    font-size: 14px;
+}
+
+.HistoryFootnote {
+    margin: 18px 0 0;
+}
+
+.HistoryError {
+    color: #b42335;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Dark Pink accents */
+:root[data-theme="dark"] .HistoryCard h3,
+:root[data-theme="dark"] .HistoryMealTop span {
+    color: #ff8fb1;
+}
+
+:root[data-theme="dark"] .HistoryError {
+    color: #ffd2df;
+}
+
+@media (max-width: 600px) {
+    .HistoryContent {
+        margin: 25px 15px;
+    }
+
+    .HistoryCard {
+        padding: 20px;
+    }
+
+    .HistoryGoalItem {
+        flex-wrap: wrap;
+    }
+}
+
+
+/* History date navigation — Home page appearance */
+
+.HistoryDateSwipe {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin: 15px 0;
+    padding: 0 20px;
+}
+
+.HistorySwipeButton {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: var(--surface);
+    color: var(--text-h);
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.HistoryDateText {
+    flex: 0 1 auto;
+    width: fit-content;
+    padding: 13px 16px;
+    border-radius: 25px;
+    background-color: var(--surface);
+    color: var(--text-h);
+    font-size: 13px;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.HistorySwipeButton:hover {
+    background-color: var(--surface-soft);
+}
+
+/*Date Nav decor*/
+.HistoryFilter {
+    background: transparent;
+    padding: 0;
+    border: none;
+    margin-bottom: 20px;
+}
+
+.HistoryDateSwipe {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin: 12px 0;
+    padding: 0 10px;
+}
+
+.HistorySwipeButton {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    background-color: var(--surface);
+    color: var(--text-h);
+    border: 2px solid #ffb6c1;
+    border-radius: 50%;
+    font-size: 24px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.HistoryDateText {
+    flex: 0 1 auto;
+    width: fit-content;
+    background-color: var(--surface);
+    color: var(--text-h);
+    border: 2px solid #ffb6c1;
+    border-radius: 25px;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Dark Pink: black bubbles with pink outlines */
+:root[data-theme="dark"] .HistorySwipeButton,
+:root[data-theme="dark"] .HistoryDateText {
+    background-color: var(--surface);
+    border-color: #c7799a;
+    color: var(--text-h);
+}

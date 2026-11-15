@@ -1,0 +1,120 @@
+.caltrack-dropdown {
+    position: relative;
+    width: 100%;
+    text-align: left;
+}
+
+.caltrack-dropdown-trigger {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 18px;
+    border: 1.5px solid #ff9bb5;
+    border-radius: 25px;
+    background: var(--surface);
+    color: var(--text-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 15px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.caltrack-dropdown-trigger:hover,
+.caltrack-dropdown-trigger.open {
+    border-color: #e75b88;
+}
+
+.caltrack-dropdown-trigger:focus-visible {
+    outline: 2px solid #e75b88;
+    outline-offset: 3px;
+}
+
+.caltrack-dropdown-arrow {
+    color: #d94d7c;
+    font-size: 23px;
+    line-height: 1;
+    transition: transform 0.2s;
+}
+
+.caltrack-dropdown-arrow.up {
+    transform: rotate(180deg);
+}
+
+.caltrack-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 7px;
+    box-shadow: 0 10px 28px rgba(60, 25, 45, 0.16);
+    max-height: 260px;
+    overflow-y: auto;
+    animation: dropdown-appear 0.16s ease-out;
+}
+
+.caltrack-dropdown-option {
+    width: 100%;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-h);
+    text-align: left;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.caltrack-dropdown-option:hover,
+.caltrack-dropdown-option.focused {
+    background: var(--surface-soft);
+}
+
+.caltrack-dropdown-option.selected {
+    background: #ffe5ee;
+    color: #a83265;
+    font-weight: 600;
+}
+
+.caltrack-dropdown-check {
+    font-size: 17px;
+    color: #d94d7c;
+}
+
+:root[data-theme="dark"] .caltrack-dropdown-trigger,
+:root[data-theme="dark"] .caltrack-dropdown-menu {
+    background: var(--surface);
+    color: var(--text-h);
+    border-color: var(--border);
+}
+
+:root[data-theme="dark"] .caltrack-dropdown-option.selected {
+    background: #51243b;
+    color: #ffc2d8;
+}
+
+:root[data-theme="dark"] .caltrack-dropdown-option.selected .caltrack-dropdown-check {
+    color: #ffc2d8;
+}
+
+@keyframes dropdown-appear {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

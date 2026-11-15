@@ -1,6 +1,7 @@
 // @ts-ignore
 import React from 'react';
 import { MealLogForm, Ingredient } from '../types/meal';
+import CalTrackDropdown from './CalTrackDropdown';
 
 export interface SavedMealSuggestion {
     foodName: string;
@@ -124,16 +125,24 @@ export const MealDetails: React.FC<Props> = ({ mealData, setMealData, onSubmit, 
 
             <div className="form-group">
                 <label>Meal Type</label>
-                <select
+
+                <CalTrackDropdown
+                    ariaLabel="Meal Type"
                     value={mealData.mealType}
-                    onChange={(e) => setMealData({ ...mealData, mealType: e.target.value as MealLogForm['mealType'] })}
-                >
-                    <option value="Breakfast">Breakfast</option>
-                    <option value="Lunch">Lunch</option>
-                    <option value="Dinner">Dinner</option>
-                    <option value="Snack">Snack</option>
-                    <option value="Drinks">Drinks</option>
-                </select>
+                    onChange={(value) =>
+                        setMealData({
+                            ...mealData,
+                            mealType: value as MealLogForm['mealType'],
+                        })
+                    }
+                    options={[
+                        { value: 'Breakfast', label: 'Breakfast' },
+                        { value: 'Lunch', label: 'Lunch' },
+                        { value: 'Dinner', label: 'Dinner' },
+                        { value: 'Snack', label: 'Snack' },
+                        { value: 'Drinks', label: 'Drinks' },
+                    ]}
+                />
             </div>
 
             {/* VERTICAL MACROS CARD */}

@@ -2,6 +2,7 @@ import './GoalsPage.css';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import NavBar from '../components/NavBar';
+import CalTrackDropdown from '../components/CalTrackDropdown';
 import './Settingspage.css';
 
 interface GoalsPageProps {
@@ -202,15 +203,18 @@ function GoalsPage({ onBack, onNavigate }: GoalsPageProps) {
                     <h3>Primary Tracking Metric</h3>
                     <p>Choose what your dashboard focuses on.</p>
 
-                    <select
+
+                    <CalTrackDropdown
+                        ariaLabel="Primary Tracking Metric"
                         value={primaryMetric}
-                        onChange={(e) => setPrimaryMetric(e.target.value)}
-                    >
-                        <option value="calories">Calories</option>
-                        <option value="protein">Protein</option>
-                        <option value="carbs">Carbohydrates</option>
-                        <option value="fat">Fat</option>
-                    </select>
+                        onChange={(value) => setPrimaryMetric(value)}
+                        options={[
+                            { value: 'calories', label: 'Calories' },
+                            { value: 'protein', label: 'Protein' },
+                            { value: 'carbs', label: 'Carbohydrates' },
+                            { value: 'fat', label: 'Fat' },
+                        ]}
+                    />
                 </div>
 
                 <div className="goal-card">
@@ -253,14 +257,18 @@ function GoalsPage({ onBack, onNavigate }: GoalsPageProps) {
                     <h3>Weight Goals</h3>
 
                     <label>My goal is to:</label>
-                    <select
+
+                    <CalTrackDropdown
+                        ariaLabel="Weight Goal"
                         value={weightGoal}
-                        onChange={(e) => setWeightGoal(e.target.value)}
-                    >
-                        <option value="lose">Lose weight</option>
-                        <option value="maintain">Maintain weight</option>
-                        <option value="gain">Gain weight</option>
-                    </select>
+                        onChange={(value) => setWeightGoal(value)}
+                        options={[
+                            { value: 'lose', label: 'Lose weight' },
+                            { value: 'maintain', label: 'Maintain weight' },
+                            { value: 'gain', label: 'Gain weight' },
+                        ]}
+                    />
+
 
                     <label>Target Weight (lb)</label>
                     <input

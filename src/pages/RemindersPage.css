@@ -1,0 +1,116 @@
+.SettingsPage.RemindersPage {
+    min-height: 100vh;
+    background-color: var(--bg);
+    color: var(--text-h);
+    padding-bottom: 110px;
+}
+
+.RemindersHeader {
+    position: relative;
+    margin: 20px 25px 0;
+    padding: 15px;
+    border-radius: 15px;
+    background-color: var(--surface);
+    color: var(--text-h);
+    text-align: center;
+}
+
+.RemindersHeader h2 {
+    margin: 0;
+    font-size: 25px;
+}
+
+.RemindersBack {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-h);
+    font-size: 26px;
+    cursor: pointer;
+}
+
+.RemindersContent {
+    margin: 35px 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+}
+
+.RemindersDescription {
+    margin: 0 0 8px;
+    color: var(--text-h);
+    font-size: 15px;
+}
+
+.ReminderCard {
+    background-color: var(--surface);
+    color: var(--text-h);
+    border-radius: 25px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ReminderCardTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ReminderCardTop label {
+    font-size: 19px;
+    font-weight: bold;
+}
+
+.ReminderCardTop input {
+    width: 20px;
+    height: 20px;
+    accent-color: #e75480;
+    cursor: pointer;
+}
+
+.ReminderTimeLabel {
+    font-size: 14px;
+}
+
+.ReminderTime {
+    padding: 12px;
+    border-radius: 15px;
+    border: 1px solid var(--border);
+    background-color: var(--surface-soft);
+    color: var(--text-h);
+    font-size: 16px;
+}
+
+.ReminderPermissionButton,
+.ReminderSaveButton {
+    padding: 16px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.ReminderPermissionButton {
+    background-color: var(--surface);
+    color: var(--text-h);
+}
+
+.ReminderSaveButton {
+    background-color: #ff7393;
+    color: white;
+}
+
+.ReminderMessage,
+.ReminderNote {
+    text-align: center;
+    color: var(--text-h);
+    font-size: 14px;
+    margin: 0;
+}
